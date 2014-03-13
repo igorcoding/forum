@@ -1,3 +1,6 @@
+# .idea
+.idea/workspace.xml
+
 *.py[cod]
 
 # C extensions
