@@ -1,9 +1,10 @@
 from forum import settings
 
 import MySQLdb
+import MySQLdb.cursors
 
 
-class ForumDataService:
+class DataService:
     def __init__(self):
         self.host = settings.DATABASES['default']['HOST']
         self.port = int(settings.DATABASES['default']['PORT'])
@@ -19,8 +20,8 @@ class ForumDataService:
                                   port=self.port,
                                   db=self.db_name,
                                   user=self.username,
-                                  passwd=self.password)
+                                  passwd=self.password,
+                                  cursorclass=MySQLdb.cursors.SSDictCursor)
 
-    def query(self, query):
-        self.db.query(query)
-        return self.db.store_result()
+    def disconnect(self):
+        self.db.close()

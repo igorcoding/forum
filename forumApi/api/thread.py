@@ -1,39 +1,46 @@
-class Thread:
-    def __init__(self):
-        pass
+def create(db, **kwargs):
+    pass
 
-    def create(self, **kwargs):
-        pass
 
-    def close(self, **kwargs):
-        pass
+def close(db, **kwargs):
+    pass
 
-    def details(self, **kwargs):
-        pass
 
-    def list(self, **kwargs):
-        pass
+def details(db, **kwargs):
+    pass
 
-    def list_posts(self, **kwargs):
-        pass
 
-    def open(self, **kwargs):
-        pass
+def list(db, **kwargs):
+    pass
 
-    def remove(self, **kwargs):
-        pass
 
-    def restore(self, **kwargs):
-        pass
+def list_posts(db, **kwargs):
+    pass
 
-    def subscribe(self, **kwargs):
-        pass
 
-    def unsubscribe(self, **kwargs):
-        pass
+def open(db, **kwargs):
+    pass
 
-    def update(self, **kwargs):
-        pass
 
-    def vote(self, **kwargs):
-        pass
+def remove(db, **kwargs):
+    pass
+
+
+def restore(db, **kwargs):
+    pass
+
+
+def subscribe(db, **kwargs):
+    pass
+
+
+def unsubscribe(db, **kwargs):
+    pass
+
+
+def update(db, **kwargs):
+    pass
+
+
+def vote(db, **kwargs):
+    pass

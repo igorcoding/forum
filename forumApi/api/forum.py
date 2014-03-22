@@ -1,34 +1,44 @@
-class Forum:
-    def __init__(self, data_service):
-        self.data_service = data_service
-        pass
+from forumApi.api import user
+from forumApi.util.helpers import response_good
 
-    def create(self, **kwargs):
-        pass
 
-    def details(self, **kwargs):
-        if 'forum' not in kwargs:
-            raise Exception("forum short_name is required.")
-        if 'related' not in kwargs:
-            kwargs['related'] = []
+def create(db, **kwargs):
+    pass
 
-        query = """SELECT * FROM forum
-                   INNER JOIN user ON forum.user_id = user.id
-                   WHERE forum.short_name = '{0}'
-                """\
-                .format(kwargs['forum'])
 
-        res = self.data_service.query(query)
-        row = res.fetch_row(how=1, maxrows=10)
-        pass
-        #return response_good(result)
+def details(db, **kwargs):
+    if 'forum' not in kwargs:
+        raise Exception("forum short_name is required.")
+    if 'related' not in kwargs:
+        kwargs['related'] = []
 
-    def list_posts(self, **kwargs):
-        pass
+    c = db.cursor()
+    c.execute("""SELECT * FROM forum
+               WHERE forum.short_name = %s""", (kwargs['forum'],))
+    forum_data = c.fetchone()
+    c.close()
 
-    def list_threads(self, **kwargs):
-        pass
+    email = forum_data['user']
+    if 'user' in kwargs['related']:
+        user_data = user.details(db, output='raw', user=email)
+    else:
+        user_data = email
 
-    def list_users(self, **kwargs):
-        pass
+    del forum_data['user_id']
+    forum_data['user'] = user_data
+
+    resp = response_good(forum_data)
+    return resp
+
+
+def list_posts(db, **kwargs):
+    pass
+
+
+def list_threads(db, **kwargs):
+    pass
+
+
+def list_users(db, **kwargs):
+    pass
 
