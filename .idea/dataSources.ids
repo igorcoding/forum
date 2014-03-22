@@ -10,6 +10,7 @@
     <table name="followers" schema="" catalog="forum_db" type="TABLE">
       <column name="follower" sqlType="BIGINT UNSIGNED" length="20" precision="0" nullable="false" jdbcType="-5"/>
       <column name="followee" sqlType="BIGINT UNSIGNED" length="20" precision="0" nullable="false" jdbcType="-5"/>
+      <column name="unfollowed" sqlType="TINYINT" length="3" precision="0" nullable="false" jdbcType="-6" def="MA=="/>
       <primary-key name="PRIMARY" columns="follower,followee"/>
       <foreign-key name="fk_user_has_user_user" columns="follower" ref-table="user" ref-schema="" ref-catalog="forum_db" ref-columns="id" update-rule="3" delete-rule="3" deferrability="2"/>
       <foreign-key name="fk_user_has_user_user1" columns="followee" ref-table="user" ref-schema="" ref-catalog="forum_db" ref-columns="id" update-rule="3" delete-rule="3" deferrability="2"/>
@@ -39,6 +40,7 @@
       <column name="isHighlighted" sqlType="TINYINT UNSIGNED" length="3" precision="0" nullable="false" jdbcType="-6"/>
       <column name="isSpam" sqlType="TINYINT UNSIGNED" length="3" precision="0" nullable="false" jdbcType="-6"/>
       <column name="message" sqlType="MEDIUMTEXT" length="16777215" precision="0" nullable="false" jdbcType="-1"/>
+      <column name="parent" sqlType="BIGINT UNSIGNED" length="20" precision="0" nullable="false" jdbcType="-5"/>
       <column name="points" sqlType="INT UNSIGNED" length="10" precision="0" nullable="false" jdbcType="4"/>
       <column name="forum" sqlType="VARCHAR" length="255" precision="0" nullable="false" jdbcType="12"/>
       <column name="user" sqlType="VARCHAR" length="45" precision="0" nullable="false" jdbcType="12"/>
@@ -53,6 +55,7 @@
     <table name="subscriptions" schema="" catalog="forum_db" type="TABLE">
       <column name="user_id" sqlType="BIGINT UNSIGNED" length="20" precision="0" nullable="false" jdbcType="-5"/>
       <column name="thread_id" sqlType="BIGINT UNSIGNED" length="20" precision="0" nullable="false" jdbcType="-5"/>
+      <column name="unsubscribed" sqlType="TINYINT" length="3" precision="0" nullable="false" jdbcType="-6"/>
       <primary-key name="PRIMARY" columns="user_id,thread_id"/>
       <foreign-key name="fk_userId_to_user_id" columns="user_id" ref-table="user" ref-schema="" ref-catalog="forum_db" ref-columns="id" update-rule="3" delete-rule="3" deferrability="2"/>
       <foreign-key name="fk_threadId_to_thread_id" columns="thread_id" ref-table="thread" ref-schema="" ref-catalog="forum_db" ref-columns="id" update-rule="3" delete-rule="3" deferrability="2"/>

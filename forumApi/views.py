@@ -1,13 +1,33 @@
 import json
 from django.http.response import HttpResponse
 from django.shortcuts import render
+from django.views.decorators.csrf import csrf_exempt
 
 from forumApi.api import forum
+from forumApi.api import user
+from forumApi.api import thread
+from forumApi.api import post
 from forumApi.util.DataService import DataService
+from forumApi.util.helpers import response_good
 
 
-def index(request):
+@csrf_exempt
+def index(request, entity, action):
+    entity = {
+        "forum": forum,
+        "user": user,
+        "thread": thread,
+        "post": post
+    }[entity]
+
+    data_dict = json.loads(request.body) if request.method == 'POST' else request.GET
+    print data_dict
+
+    func = getattr(entity, action)
+
     data_service = DataService()
     db = data_service.db
-    result = forum.details(db, forum='test_forum', related=['user'])
-    return HttpResponse(json.dumps(result), content_type='application/json')
+    result = func(db, **data_dict)
+    response = response_good(result)
+
+    return HttpResponse(json.dumps(response), content_type='application/json')

@@ -1,16 +1,25 @@
 from forumApi.api import user
-from forumApi.util.helpers import response_good
+from forumApi.api.helpers.common_helper import *
+from forumApi.api.helpers.user_helper import get_id_by_email
 
 
 def create(db, **kwargs):
-    pass
+    required(['name', 'short_name', 'user'], kwargs)
+
+    user_id = get_id_by_email(db, kwargs['user'])
+    c = db.cursor()
+    c.execute("""INSERT INTO forum (name, short_name, user, user_id)
+                 VALUES (%s, %s, %s, %s)""",
+              (kwargs['name'], kwargs['short_name'], kwargs['user'], user_id))
+    db.commit()
+    c.close()
+
+    return details(db, forum=kwargs['short_name'])
 
 
 def details(db, **kwargs):
-    if 'forum' not in kwargs:
-        raise Exception("forum short_name is required.")
-    if 'related' not in kwargs:
-        kwargs['related'] = []
+    required(['forum'], kwargs)
+    optional('related', kwargs, [])
 
     c = db.cursor()
     c.execute("""SELECT * FROM forum
@@ -27,18 +36,17 @@ def details(db, **kwargs):
     del forum_data['user_id']
     forum_data['user'] = user_data
 
-    resp = response_good(forum_data)
-    return resp
+    return forum_data
 
 
-def list_posts(db, **kwargs):
+def listPosts(db, **kwargs):
     pass
 
 
-def list_threads(db, **kwargs):
+def listThreads(db, **kwargs):
     pass
 
 
-def list_users(db, **kwargs):
+def listUsers(db, **kwargs):
     pass
 
