@@ -1,15 +1,18 @@
+import user
+from forumApi.api import forum
 from forumApi.api.helpers.common_helper import *
 from forumApi.api.helpers.forum_helper import get_id_by_short_name
 from forumApi.api.helpers.user_helper import get_id_by_email
 
 
-def create(db, **kwargs):
+def create(ds, **kwargs):
     required(['forum', 'title', 'isClosed', 'user', 'date', 'message', 'slug'], kwargs)
     optional('isDeleted', kwargs, False)
-    kwargs['isClosed'] = False if kwargs['isClosed'] == 'False' else True
 
-    forum_id = get_id_by_short_name(db, kwargs['forum'])
-    user_id = get_id_by_email(db, kwargs['user'])
+    forum_id = get_id_by_short_name(ds, kwargs['forum'])
+    user_id = get_id_by_email(ds, kwargs['user'])
+
+    db = ds.get_db()
     c = db.cursor()
     c.execute("""INSERT INTO thread (forum, forum_id, title, isClosed, user, user_id, date, message, slug, isDeleted)
                  VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)""",
@@ -18,13 +21,15 @@ def create(db, **kwargs):
     thread_id = c.lastrowid
     db.commit()
     c.close()
+    ds.close_last()
 
-    return details(db, thread=thread_id)
+    return details(ds, thread=thread_id)
 
 
-def close(db, **kwargs):
+def close(ds, **kwargs):
     required(['thread'], kwargs)
 
+    db = ds.get_db()
     c = db.cursor()
     c.execute("""UPDATE thread
                  SET isClosed = 1
@@ -32,25 +37,49 @@ def close(db, **kwargs):
               (kwargs['thread'],))
     db.commit()
     c.close()
+    ds.close_last()
 
     return {'thread': kwargs['thread']}
 
 
-def details(db, **kwargs):
+def details(ds, **kwargs):
+    required(['thread'], kwargs)
+    optional('related', kwargs, [], ['user', 'forum'])
+
+    db = ds.get_db()
+    c = db.cursor()
+    c.execute("""SELECT * FROM thread
+               WHERE id = %s""", (kwargs['thread'],))
+    thread_data = c.fetchone()
+    c.close()
+    ds.close_last()
+
+    make_boolean(['isClosed', 'isDeleted'], thread_data)
+
+    del thread_data['user_id']
+    del thread_data['forum_id']
+
+    if 'user' in kwargs['related']:
+        thread_data['user'] = user.details(ds, user=thread_data['user'])
+
+    if 'forum' in kwargs['related']:
+        thread_data['forum'] = forum.details(ds, forum=thread_data['forum'])
+
+    return thread_data
+
+
+def list(ds, **kwargs):
     pass
 
 
-def list(db, **kwargs):
+def listPosts(ds, **kwargs):
     pass
 
 
-def listPosts(db, **kwargs):
-    pass
-
-
-def open(db, **kwargs):
+def open(ds, **kwargs):
     required(['thread'], kwargs)
 
+    db = ds.get_db()
     c = db.cursor()
     c.execute("""UPDATE thread
                  SET isClosed = 0
@@ -58,29 +87,113 @@ def open(db, **kwargs):
               (kwargs['thread'],))
     db.commit()
     c.close()
+    ds.close_last()
 
     return {'thread': kwargs['thread']}
 
 
-def remove(db, **kwargs):
-    pass
+def remove(ds, **kwargs):
+    required(['thread'], kwargs)
+
+    db = ds.get_db()
+    c = db.cursor()
+    c.execute("""UPDATE thread
+                 SET isDeleted = 1
+                 WHERE id = %s""",
+              (kwargs['thread'],))
+    db.commit()
+    c.close()
+    ds.close_last()
+
+    return {'thread': kwargs['thread']}
 
 
-def restore(db, **kwargs):
-    pass
+def restore(ds, **kwargs):
+    required(['thread'], kwargs)
+
+    db = ds.get_db()
+    c = db.cursor()
+    c.execute("""UPDATE thread
+                 SET isDeleted = 0
+                 WHERE id = %s""",
+              (kwargs['thread'],))
+    db.commit()
+    c.close()
+    ds.close_last()
+
+    return {'thread': kwargs['thread']}
 
 
-def subscribe(db, **kwargs):
-    pass
+def subscribe(ds, **kwargs):
+    required(['user', 'thread'], kwargs)
+
+    user_id = get_id_by_email(ds, kwargs['user'])
+    thread_id = kwargs['thread']
+
+    db = ds.get_db()
+    c = db.cursor()
+    c.execute("""SELECT * FROM subscriptions
+                 WHERE user_id = %s AND thread_id = %s""",
+              (user_id, thread_id))
+    subscribed = c.fetchone()
+    c.close()
+
+    if subscribed:
+        query = """UPDATE subscriptions SET unsubscribed = 0
+                   WHERE user_id = %s AND thread_id = %s"""
+    else:
+        query = """INSERT INTO subscriptions (user_id, thread_id)
+                   VALUES (%s, %s)"""
+
+    c = db.cursor()
+    c.execute(query, (user_id, thread_id))
+    db.commit()
+    c.close()
+    ds.close_last()
+
+    return {
+        'thread': kwargs['thread'],
+        'user': kwargs['user']
+    }
 
 
-def unsubscribe(db, **kwargs):
-    pass
+def unsubscribe(ds, **kwargs):
+    required(['user', 'thread'], kwargs)
+
+    user_id = get_id_by_email(ds, kwargs['user'])
+    thread_id = kwargs['thread']
+
+    db = ds.get_db()
+    c = db.cursor()
+    c.execute("""UPDATE subscriptions SET unsubscribed = 1
+               WHERE user_id = %s AND thread_id = %s""",
+              (user_id, thread_id))
+    db.commit()
+    c.close()
+    ds.close_last()
+
+    return {
+        'thread': kwargs['thread'],
+        'user': kwargs['user']
+    }
 
 
-def update(db, **kwargs):
-    pass
+def update(ds, **kwargs):
+    required(['message', 'slug', 'thread'], kwargs)
+
+    db = ds.get_db()
+    c = db.cursor()
+    c.execute("""UPDATE thread
+                 SET message = %s,
+                     slug = %s
+                 WHERE id = %s""",
+              (kwargs['message'], kwargs['slug'], kwargs['thread']))
+    db.commit()
+    c.close()
+    ds.close_last()
+
+    return details(ds, thread=kwargs['thread'])
 
 
-def vote(db, **kwargs):
+def vote(ds, **kwargs):
     pass

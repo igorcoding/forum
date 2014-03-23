@@ -1,2 +1,2 @@
-def get_thread_by_id(db, thread_id):
+def get_thread_by_id(ds, thread_id):
     pass

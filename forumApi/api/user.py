@@ -1,11 +1,13 @@
 from forumApi.api.helpers.common_helper import *
 from forumApi.api.helpers.user_helper import *
+from forumApi.util.StringBuilder import StringBuilder
 
 
-def create(db, **kwargs):
+def create(ds, **kwargs):
     required(['username', 'name', 'email', 'about'], kwargs)
     optional('isAnonymous', kwargs, False)
 
+    db = ds.get_db()
     c = db.cursor()
     c.execute("""INSERT INTO user (username, name, email, about, isAnonymous, password)
                  VALUES (%s, %s, %s, %s, %s, %s)""",
@@ -19,22 +21,27 @@ def create(db, **kwargs):
                WHERE email = %s""", (kwargs['email'],))
     user_data = c.fetchone()
     c.close()
+    ds.close_last()
 
     return user_data
 
 
-def details(db, **kwargs):
+def details(ds, **kwargs):
     required(['user'], kwargs)
 
+    db = ds.get_db()
     c = db.cursor()
     c.execute("""SELECT * FROM user
                WHERE email = %s""", (kwargs['user'],))
     user_data = c.fetchone()
     c.close()
-    user_data['isAnonymous'] = bool(user_data['isAnonymous'])
 
-    user_data['followers'] = listFollowers(db, handler=get_email_by_id, user=kwargs['user'])
-    user_data['followees'] = listFollowing(db, handler=get_email_by_id, user=kwargs['user'])
+    make_boolean(['isAnonymous'], user_data)
+
+    user_data['followers'] = listFollowers(ds, handler=get_email_by_id, user=kwargs['user'])
+    user_data['followees'] = listFollowing(ds, handler=get_email_by_id, user=kwargs['user'])
+
+    del user_data['password']
 
     # getting subscriptions
     c = db.cursor()
@@ -44,19 +51,111 @@ def details(db, **kwargs):
     for s in c:
         subscriptions.append(s['thread_id'])
     c.close()
+    ds.close_last()
 
     user_data['subscriptions'] = subscriptions
 
     return user_data
 
 
-def follow(db, **kwargs):
+def listFollowers(ds, handler=get_info_by_id, **kwargs):
+    required(['user'], kwargs)
+    optional('limit', kwargs)
+    optional('order', kwargs, 'desc', ['desc', 'asc'])
+    optional('since_id', kwargs)
+
+    user_id = get_id_by_email(ds, kwargs['user'])
+
+    query = StringBuilder()
+    query.append("""SELECT followers.follower FROM followers
+                    INNER JOIN user ON followers.follower = user.id
+                    WHERE followers.followee = %s AND unfollowed = 0""")
+    params = (user_id, )
+
+    if kwargs['since_id']:
+        query.append("""AND followers.follower > %s""")
+        params += (kwargs['since_id'],)
+
+    if kwargs['order']:
+        query.append("""ORDER BY user.name %s""" % kwargs['order'])
+
+    if kwargs['limit']:
+        query.append("""LIMIT %s""")
+        params += (kwargs['limit'],)
+
+    db = ds.get_db()
+    c = db.cursor()
+    c.execute(str(query), params)
+
+    followers = []
+
+    for row in c:
+        info = handler(ds, row['follower'])
+        followers.append(info)
+
+    c.close()
+    ds.close_last()
+
+    return followers
+
+
+def listFollowing(ds, handler=get_info_by_id, **kwargs):
+    required(['user'], kwargs)
+    optional('limit', kwargs)
+    optional('order', kwargs, 'desc', ['desc', 'asc'])
+    optional('since_id', kwargs)
+
+    user_id = get_id_by_email(ds, kwargs['user'])
+
+    query = StringBuilder()
+    query.append("""SELECT followers.followee FROM followers
+                    INNER JOIN user ON followers.followee = user.id
+                    WHERE followers.followee = %s AND unfollowed = 0""")
+    params = (user_id, )
+
+    if kwargs['since_id']:
+        query.append("""AND followers.followee > %s""")
+        params += (kwargs['since_id'],)
+
+    if kwargs['order']:
+        query.append("""ORDER BY user.name %s""" % kwargs['order'])
+
+    if kwargs['limit']:
+        query.append("""LIMIT %s""")
+        params += (kwargs['limit'],)
+
+    db = ds.get_db()
+    c = db.cursor()
+    c.execute(str(query), params)
+
+    followees = []
+
+    for row in c:
+        info = handler(ds, row['followee'])
+        followees.append(info)
+
+    c.close()
+    ds.close_last()
+
+    return followees
+
+
+def listPosts(ds, **kwargs):
+    pass
+
+
+def follow(ds, **kwargs):
     required(['follower', 'followee'], kwargs)
 
+    follower_id = get_id_by_email(ds, kwargs['follower'])
+    followee_id = get_id_by_email(ds, kwargs['followee'])
+    params = (follower_id, followee_id)
+
+    db = ds.get_db()
     c = db.cursor()
     c.execute("""SELECT * FROM followers
                  WHERE follower = %s AND followee = %s""",
-             (kwargs['follower'], kwargs['followee']))
+              params)
 
     in_base_follower = c.fetchone()
     c.close()
@@ -69,113 +168,37 @@ def follow(db, **kwargs):
                    VALUES (%s, %s)"""
 
     c = db.cursor()
-    c.execute(query, (kwargs['follower'], kwargs['followee']))
+    c.execute(query, params)
     db.commit()
     c.close()
+    ds.close_last()
 
-    email = get_email_by_id(db, int(kwargs['follower']))
-    return details(db, user=email)
-
-
-def listFollowers(db, handler=get_info_by_id, **kwargs):
-    required(['user'], kwargs)
-    optional('limit', kwargs)
-    optional('order', kwargs, 'desc')
-    if 'order' not in kwargs:
-        raise Exception("ill formatted request. Order not in ['desc', 'asc']")
-    optional('since_id', kwargs)
-
-    user_id = get_id_by_email(db, kwargs['user'])
-
-    followers = []
-
-    c = db.cursor()
-    query = """SELECT followers.follower FROM followers
-               INNER JOIN user ON followers.follower = user.id
-               WHERE followers.followee = %s AND unfollowed = 0"""
-    params = (user_id, )
-
-    if kwargs['since_id'] is not None:
-        query += """ AND followers.follower > %s"""
-        params += kwargs['since_id']
-
-    if kwargs['limit'] is not None:
-        query += """ LIMIT %s"""
-        params += kwargs['limit']
-
-    query += """\nORDER BY user.name"""
-
-    c.execute(query, params)
-    data = c.fetchall()
-    c.close()
-
-    for row in data:
-        info = handler(db, row['follower'])
-        followers.append(info)
-
-    return followers
+    return details(ds, user=kwargs['follower'])
 
 
-def listFollowing(db, handler=get_info_by_id, **kwargs):
-    required(['user'], kwargs)
-    optional('limit', kwargs)
-    optional('order', kwargs, 'desc')
-    if 'order' not in kwargs:
-        raise Exception("ill formatted request. Order not in ['desc', 'asc']")
-    optional('since_id', kwargs)
-
-    user_id = get_id_by_email(db, kwargs['user'])
-
-    followees = []
-
-    c = db.cursor()
-    query = """SELECT followers.followee FROM followers
-               INNER JOIN user ON followers.followee = user.id
-               WHERE followers.follower = %s AND unfollowed = 0"""
-    params = (user_id, )
-
-    if kwargs['since_id'] is not None:
-        query += """ AND followers.followee > %s"""
-        params += kwargs['since_id']
-
-    if kwargs['limit'] is not None:
-        query += """ LIMIT %s"""
-        params += kwargs['limit']
-
-    query += """\nORDER BY user.name"""
-
-    c.execute(query, params)
-    data = c.fetchall()
-    c.close()
-
-    for row in data:
-        info = handler(db, row['followee'])
-        followees.append(info)
-
-    return followees
-
-
-def listPosts(db, **kwargs):
-    pass
-
-
-def unfollow(db, **kwargs):
+def unfollow(ds, **kwargs):
     required(['follower', 'followee'], kwargs)
 
+    follower_id = get_id_by_email(ds, kwargs['follower'])
+    followee_id = get_id_by_email(ds, kwargs['followee'])
+    params = (follower_id, followee_id)
+
+    db = ds.get_db()
     c = db.cursor()
     c.execute("""UPDATE followers SET unfollowed=1
                  WHERE follower = %s AND followee = %s""",
-              (kwargs['follower'], kwargs['followee']))
+              params)
     db.commit()
     c.close()
+    ds.close_last()
 
-    email = get_email_by_id(db, int(kwargs['follower']))
-    return details(db, user=email)
+    return details(ds, user=kwargs['follower'])
 
 
-def updateProfile(db, **kwargs):
+def updateProfile(ds, **kwargs):
     required(['about', 'user', 'name'], kwargs)
 
+    db = ds.get_db()
     c = db.cursor()
     c.execute("""UPDATE user
                  SET about = %s,
@@ -184,5 +207,6 @@ def updateProfile(db, **kwargs):
               (kwargs['about'], kwargs['name'], kwargs['user']))
     db.commit()
     c.close()
+    ds.close_last()
 
-    return details(db, user=kwargs['user'])
+    return details(ds, user=kwargs['user'])

@@ -25,9 +25,9 @@ def index(request, entity, action):
 
     func = getattr(entity, action)
 
-    data_service = DataService()
-    db = data_service.db
-    result = func(db, **data_dict)
+    ds = DataService()
+    result = func(ds, **data_dict)
     response = response_good(result)
+    ds.close_all()
 
     return HttpResponse(json.dumps(response), content_type='application/json')
