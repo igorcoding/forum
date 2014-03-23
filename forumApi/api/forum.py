@@ -6,37 +6,37 @@ from forumApi.api.helpers.common_helper import *
 from forumApi.api.helpers.user_helper import get_id_by_email
 
 
-def create(ds, **kwargs):
-    required(['name', 'short_name', 'user'], kwargs)
+def create(ds, **args):
+    required(['name', 'short_name', 'user'], args)
 
-    user_id = get_id_by_email(ds, kwargs['user'])
+    user_id = get_id_by_email(ds, args['user'])
 
     db = ds.get_db()
     c = db.cursor()
     c.execute("""INSERT INTO forum (name, short_name, user, user_id)
                  VALUES (%s, %s, %s, %s)""",
-              (kwargs['name'], kwargs['short_name'], kwargs['user'], user_id))
+              (args['name'], args['short_name'], args['user'], user_id))
     db.commit()
     c.close()
     ds.close_last()
 
-    return details(ds, forum=kwargs['short_name'])
+    return details(ds, forum=args['short_name'])
 
 
-def details(ds, **kwargs):
-    required(['forum'], kwargs)
-    optional('related', kwargs, [], ['user'])
+def details(ds, **args):
+    required(['forum'], args)
+    optional('related', args, [], ['user'])
 
     db = ds.get_db()
     c = db.cursor()
     c.execute("""SELECT * FROM forum
-               WHERE forum.short_name = %s""", (kwargs['forum'],))
+               WHERE forum.short_name = %s""", (args['forum'],))
     forum_data = c.fetchone()
     c.close()
     ds.close_last()
 
     email = forum_data['user']
-    if 'user' in kwargs['related']:
+    if 'user' in args['related']:
         user_data = user.details(db, user=email)
     else:
         user_data = email
@@ -47,34 +47,34 @@ def details(ds, **kwargs):
     return forum_data
 
 
-def listPosts(ds, **kwargs):
-    return posts.list(ds, **kwargs)
+def listPosts(ds, **args):
+    return posts.list(ds, **args)
 
 
-def listThreads(ds, **kwargs):
-    return threads.list(ds, **kwargs)
+def listThreads(ds, **args):
+    return threads.list(ds, **args)
 
 
-def listUsers(ds, **kwargs):
-    required(['forum'], kwargs)
-    optional('since_id', kwargs)
-    optional('limit', kwargs)
-    optional('order', kwargs, 'desc', ['desc', 'asc'])
+def listUsers(ds, **args):
+    required(['forum'], args)
+    optional('since_id', args)
+    optional('limit', args)
+    optional('order', args, 'desc', ['desc', 'asc'])
 
     query = StringBuilder()
     query.append("""SELECT user FROM post
                     WHERE forum = %s""")
-    params = (kwargs['forum'],)
+    params = (args['forum'],)
 
-    if kwargs['since']:
+    if args['since']:
         query.append("""WHERE date >= %s""")
-        params += (kwargs['since'],)
+        params += (args['since'],)
 
-    if kwargs['order']:
-        query.append("""ORDER BY date %s""") % kwargs['order']
+    if args['order']:
+        query.append("""ORDER BY date %s""") % args['order']
 
-    if kwargs['limit']:
-        query.append("""LIMIT %s""") % kwargs['limit']
+    if args['limit']:
+        query.append("""LIMIT %s""") % args['limit']
 
     db = ds.get_db()
     c = db.cursor()

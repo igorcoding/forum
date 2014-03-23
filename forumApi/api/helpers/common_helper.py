@@ -1,16 +1,16 @@
-def required(param_list, kwargs):
+def required(param_list, args):
     for param in param_list:
         if type(param) != str:
             raise Exception("param must be a string value")
-        if param not in kwargs:
+        if param not in args:
             raise Exception("%s is required." % (param,))
 
 
-def semi_required(param_variations, kwargs):
+def semi_required(param_variations, args):
     atleast = False
     all = True
     for param in param_variations:
-        arg = param in kwargs
+        arg = param in args
         atleast = atleast or arg
         all = all and arg
 
@@ -20,20 +20,20 @@ def semi_required(param_variations, kwargs):
         raise Exception("None of variations is in the arguments list")
 
 
-def optional(param, kwargs, default=None, possible_values=None):
-    if param not in kwargs:
-        kwargs[param] = default
+def optional(param, args, default=None, possible_values=None):
+    if param not in args:
+        args[param] = default
 
     def check_arg(arg, values):
         if arg not in values:
             raise Exception("%s not in %s" % (arg, values))
 
-    if type(kwargs[param]) == list and type(possible_values) == list:
-        for arg in kwargs[param]:
+    if type(args[param]) == list and type(possible_values) == list:
+        for arg in args[param]:
             check_arg(arg, possible_values)
 
-    if type(kwargs[param]) != list and type(possible_values) == list:
-        check_arg(kwargs[param], possible_values)
+    if type(args[param]) != list and type(possible_values) == list:
+        check_arg(args[param], possible_values)
 
 
 def make_boolean(params, arr):

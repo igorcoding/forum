@@ -2,6 +2,7 @@ import json
 from django.http.response import HttpResponse
 from django.shortcuts import render
 from django.views.decorators.csrf import csrf_exempt
+import time
 
 from forumApi.api import forum
 from forumApi.api import user
@@ -20,7 +21,7 @@ def index(request, entity, action):
         "post": post
     }[entity]
 
-    data_dict = json.loads(request.body) if request.method == 'POST' else parse_get(request.GET)
+    data_dict = json.loads(request.body, encoding='utf-8') if request.method == 'POST' else parse_get(request.GET)
     print data_dict
 
     func = getattr(entity, action)
@@ -30,4 +31,4 @@ def index(request, entity, action):
     response = response_good(result)
     ds.close_all()
 
-    return HttpResponse(json.dumps(response), content_type='application/json')
+    return HttpResponse(json.dumps(response, ensure_ascii=False), content_type='application/json')

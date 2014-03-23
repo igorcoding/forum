@@ -6,25 +6,25 @@ from forumApi.api.helpers.common_helper import required, optional, make_boolean,
 from forumApi.api.helpers.user_helper import get_id_by_email
 
 
-def create(ds, **kwargs):
-    required(['date', 'thread', 'message', 'user', 'forum'], kwargs)
-    optional('parent', kwargs)
-    optional('isApproved', kwargs, False)
-    optional('isHighlighted', kwargs, False)
-    optional('isEdited', kwargs, False)
-    optional('isSpam', kwargs, False)
-    optional('isDeleted', kwargs, False)
+def create(ds, **args):
+    required(['date', 'thread', 'message', 'user', 'forum'], args)
+    optional('parent', args)
+    optional('isApproved', args, False)
+    optional('isHighlighted', args, False)
+    optional('isEdited', args, False)
+    optional('isSpam', args, False)
+    optional('isDeleted', args, False)
 
-    user_id = get_id_by_email(ds, kwargs['user'])
+    user_id = get_id_by_email(ds, args['user'])
 
     db = ds.get_db()
     c = db.cursor()
     c.execute("""INSERT INTO post (date, thread_id, message, user, user_id, forum, parent,
                                    isApproved, isHighlighted, isEdited, isSpam, isDeleted)
                  VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)""",
-              (kwargs['date'], kwargs['thread'], kwargs['message'], kwargs['user'], user_id,
-               kwargs['forum'], kwargs['parent'], kwargs['isApproved'], kwargs['isHighlighted'],
-               kwargs['isEdited'], kwargs['isSpam'], kwargs['isDeleted']))
+              (args['date'], args['thread'], args['message'], args['user'], user_id,
+               args['forum'], args['parent'], args['isApproved'], args['isHighlighted'],
+               args['isEdited'], args['isSpam'], args['isDeleted']))
     post_id = c.lastrowid
     db.commit()
     c.close()
@@ -33,14 +33,14 @@ def create(ds, **kwargs):
     return details(ds, post=post_id)
 
 
-def details(ds, **kwargs):
-    required(['post'], kwargs)
-    optional('related', kwargs, [], ['user', 'thread', 'forum'])
+def details(ds, **args):
+    required(['post'], args)
+    optional('related', args, [], ['user', 'thread', 'forum'])
 
     db = ds.get_db()
     c = db.cursor()
     c.execute("""SELECT * FROM post
-               WHERE id = %s""", (kwargs['post'],))
+               WHERE id = %s""", (args['post'],))
     post_data = c.fetchone()
     c.close()
     ds.close_last()
@@ -52,52 +52,53 @@ def details(ds, **kwargs):
     del post_data['user_id']
     del post_data['thread_id']
 
-    if 'user' in kwargs['related']:
+    if 'user' in args['related']:
         post_data['user'] = user.details(ds, user=post_data['user'])
 
-    if 'thread' in kwargs['related']:
+    if 'thread' in args['related']:
         post_data['thread'] = thread.details(ds, thread=thread_id)
     else:
         post_data['thread'] = thread_id
 
-    if 'forum' in kwargs['related']:
+    if 'forum' in args['related']:
         post_data['forum'] = forum.details(ds, forum=post_data['forum'])
 
     return post_data
 
 
-def list(ds, **kwargs):
-    semi_required(['forum', 'thread', 'user'], kwargs)
-    optional('since', kwargs)
-    optional('limit', kwargs)
-    optional('order', kwargs, 'desc', ['desc', 'asc'])
-    optional('related', kwargs, [], ['user', 'forum'])
+def list(ds, orderby='date', **args):
+    semi_required(['forum', 'thread', 'user'], args)
+    optional('since', args)
+    optional('limit', args)
+    optional('order', args, 'desc', ['desc', 'asc'])
+    optional('related', args, [], ['user', 'forum'])
 
     query = StringBuilder()
     query.append("""SELECT id FROM post""")
     params = ()
 
-    if 'forum' in kwargs:
+    if 'forum' in args:
         query.append("""WHERE forum = %s""")
-        params += (kwargs['forum'],)
+        params += (args['forum'],)
 
-    elif 'thread' in kwargs:
+    elif 'thread' in args:
         query.append("""WHERE thread_id = %s""")
-        params += (kwargs['thread'],)
+        params += (args['thread'],)
 
-    elif 'user' in kwargs:
+    elif 'user' in args:
         query.append("""WHERE user = %s""")
-        params += (kwargs['user'],)
+        params += (args['user'],)
 
-    if kwargs['since']:
+    if args['since']:
         query.append("""WHERE date >= %s""")
-        params += (kwargs['since'],)
+        params += (args['since'],)
 
-    if kwargs['order']:
-        query.append("""ORDER BY date %s""" % kwargs['order'])
+    if args['order']:
+        query.append("""ORDER BY %s """ + args['order'])
+        params += (orderby,)
 
-    if kwargs['limit']:
-        query.append("""LIMIT %d""" % int(kwargs['limit']))
+    if args['limit']:
+        query.append("""LIMIT %d""" % int(args['limit']))
 
     db = ds.get_db()
     c = db.cursor()
@@ -105,7 +106,7 @@ def list(ds, **kwargs):
 
     posts = []
     for row in c:
-        posts.append(details(ds, post=row['id'], related=kwargs['related']))
+        posts.append(details(ds, post=row['id'], related=args['related']))
 
     c.close()
     ds.close_last()
@@ -113,8 +114,8 @@ def list(ds, **kwargs):
     return posts
 
 
-def remove(ds, **kwargs):
-    required(['post'], kwargs)
+def remove(ds, **args):
+    required(['post'], args)
 
     # TODO: removing nested posts
     db = ds.get_db()
@@ -122,45 +123,45 @@ def remove(ds, **kwargs):
     c.execute("""UPDATE post
                  SET isDeleted = 1
                  WHERE id = %s""",
-              (kwargs['post'],))
+              (args['post'],))
     db.commit()
     c.close()
     ds.close_last()
 
-    return {'post': kwargs['post']}
+    return {'post': args['post']}
 
 
-def restore(ds, **kwargs):
-    required(['post'], kwargs)
+def restore(ds, **args):
+    required(['post'], args)
 
     db = ds.get_db()
     c = db.cursor()
     c.execute("""UPDATE post
                  SET isDeleted = 0
                  WHERE id = %s""",
-              (kwargs['post'],))
+              (args['post'],))
     db.commit()
     c.close()
     ds.close_last()
 
-    return {'post': kwargs['post']}
+    return {'post': args['post']}
 
 
-def update(ds, **kwargs):
-    required(['message', 'post'], kwargs)
+def update(ds, **args):
+    required(['message', 'post'], args)
 
     db = ds.get_db()
     c = db.cursor()
     c.execute("""UPDATE post
                  SET message = %s
                  WHERE id = %s""",
-              (kwargs['message'], kwargs['post']))
+              (args['message'], args['post']))
     db.commit()
     c.close()
     ds.close_last()
 
-    return details(ds, post=int(kwargs['post']))
+    return details(ds, post=int(args['post']))
 
 
-def vote(ds, **kwargs):
+def vote(ds, **args):
     pass

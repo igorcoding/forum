@@ -6,11 +6,13 @@ import MySQLdb.cursors
 
 class DataService:
     def __init__(self):
-        self.host = settings.DATABASES['default']['HOST']
-        self.port = int(settings.DATABASES['default']['PORT'])
-        self.db_name = settings.DATABASES['default']['NAME']
-        self.username = settings.DATABASES['default']['USER']
-        self.password = settings.DATABASES['default']['PASSWORD']
+        default_db = settings.DATABASES['default']
+
+        self.host = default_db['HOST']
+        self.port = int(default_db['PORT'])
+        self.db_name = default_db['NAME']
+        self.username = default_db['USER']
+        self.password = default_db['PASSWORD']
         self.opened_connections = []
 
     def connect(self):

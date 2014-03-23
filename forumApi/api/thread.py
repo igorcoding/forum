@@ -7,21 +7,21 @@ from forumApi.api.helpers.forum_helper import get_id_by_short_name
 from forumApi.api.helpers.user_helper import get_id_by_email
 
 
-def create(ds, **kwargs):
-    required(['forum', 'title', 'isClosed', 'user', 'date', 'message', 'slug'], kwargs)
-    optional('isDeleted', kwargs, False)
+def create(ds, **args):
+    required(['forum', 'title', 'isClosed', 'user', 'date', 'message', 'slug'], args)
+    optional('isDeleted', args, False)
 
-    make_boolean(['isClosed', 'isDeleted'], kwargs)
+    make_boolean(['isClosed', 'isDeleted'], args)
 
-    forum_id = get_id_by_short_name(ds, kwargs['forum'])
-    user_id = get_id_by_email(ds, kwargs['user'])
+    forum_id = get_id_by_short_name(ds, args['forum'])
+    user_id = get_id_by_email(ds, args['user'])
 
     db = ds.get_db()
     c = db.cursor()
     c.execute("""INSERT INTO thread (forum, forum_id, title, isClosed, user, user_id, date, message, slug, isDeleted)
                  VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)""",
-              (kwargs['forum'], forum_id, kwargs['title'], int(kwargs['isClosed']), kwargs['user'],
-               user_id, kwargs['date'], kwargs['message'], kwargs['slug'], int(kwargs['isDeleted'])))
+              (args['forum'], forum_id, args['title'], int(args['isClosed']), args['user'],
+               user_id, args['date'], args['message'], args['slug'], int(args['isDeleted'])))
     thread_id = c.lastrowid
     db.commit()
     c.close()
@@ -30,30 +30,30 @@ def create(ds, **kwargs):
     return details(ds, thread=thread_id)
 
 
-def close(ds, **kwargs):
-    required(['thread'], kwargs)
+def close(ds, **args):
+    required(['thread'], args)
 
     db = ds.get_db()
     c = db.cursor()
     c.execute("""UPDATE thread
                  SET isClosed = 1
                  WHERE id = %s""",
-              (kwargs['thread'],))
+              (args['thread'],))
     db.commit()
     c.close()
     ds.close_last()
 
-    return {'thread': kwargs['thread']}
+    return {'thread': args['thread']}
 
 
-def details(ds, **kwargs):
-    required(['thread'], kwargs)
-    optional('related', kwargs, [], ['user', 'forum'])
+def details(ds, **args):
+    required(['thread'], args)
+    optional('related', args, [], ['user', 'forum'])
 
     db = ds.get_db()
     c = db.cursor()
     c.execute("""SELECT * FROM thread
-               WHERE id = %s""", (kwargs['thread'],))
+               WHERE id = %s""", (args['thread'],))
     thread_data = c.fetchone()
     c.close()
     ds.close_last()
@@ -64,43 +64,44 @@ def details(ds, **kwargs):
     del thread_data['user_id']
     del thread_data['forum_id']
 
-    if 'user' in kwargs['related']:
+    if 'user' in args['related']:
         thread_data['user'] = user.details(ds, user=thread_data['user'])
 
-    if 'forum' in kwargs['related']:
+    if 'forum' in args['related']:
         thread_data['forum'] = forum.details(ds, forum=thread_data['forum'])
 
     return thread_data
 
 
-def list(ds, **kwargs):
-    semi_required(['user', 'forum'], kwargs)
-    optional('since', kwargs)
-    optional('limit', kwargs)
-    optional('order', kwargs, 'desc', ['desc', 'asc'])
-    optional('related', kwargs, [], ['user', 'forum'])
+def list(ds, orderby='date', **args):
+    semi_required(['user', 'forum'], args)
+    optional('since', args)
+    optional('limit', args)
+    optional('order', args, 'desc', ['desc', 'asc'])
+    optional('related', args, [], ['user', 'forum'])
 
     query = StringBuilder()
     query.append("""SELECT id FROM thread""")
     params = ()
 
-    if 'user' in kwargs:
+    if 'user' in args:
         query.append("""WHERE user = %s""")
-        params += (kwargs['user'],)
+        params += (args['user'],)
 
-    elif 'forum' in kwargs:
+    elif 'forum' in args:
         query.append("""WHERE forum = %s""")
-        params += (kwargs['forum'],)
+        params += (args['forum'],)
 
-    if kwargs['since']:
+    if args['since']:
         query.append("""WHERE date >= %s""")
-        params += (kwargs['since'],)
+        params += (args['since'],)
 
-    if kwargs['order']:
-        query.append("""ORDER BY date %s""" % kwargs['order'])
+    if args['order']:
+        query.append("""ORDER BY %s """ + args['order'])
+        params += (orderby,)
 
-    if kwargs['limit']:
-        query.append("""LIMIT %d""" % int(kwargs['limit']))
+    if args['limit']:
+        query.append("""LIMIT %d""" % int(args['limit']))
 
     db = ds.get_db()
     c = db.cursor()
@@ -108,7 +109,7 @@ def list(ds, **kwargs):
 
     threads = []
     for row in c:
-        threads.append(details(ds, thread=row['id'], related=kwargs['related']))
+        threads.append(details(ds, thread=row['id'], related=args['related']))
 
     c.close()
     ds.close_last()
@@ -116,63 +117,63 @@ def list(ds, **kwargs):
     return threads
 
 
-def listPosts(ds, **kwargs):
-    return post.list(ds, **kwargs)
+def listPosts(ds, **args):
+    return post.list(ds, **args)
 
 
-def open(ds, **kwargs):
-    required(['thread'], kwargs)
+def open(ds, **args):
+    required(['thread'], args)
 
     db = ds.get_db()
     c = db.cursor()
     c.execute("""UPDATE thread
                  SET isClosed = 0
                  WHERE id = %s""",
-              (kwargs['thread'],))
+              (args['thread'],))
     db.commit()
     c.close()
     ds.close_last()
 
-    return {'thread': kwargs['thread']}
+    return {'thread': args['thread']}
 
 
-def remove(ds, **kwargs):
-    required(['thread'], kwargs)
+def remove(ds, **args):
+    required(['thread'], args)
 
     db = ds.get_db()
     c = db.cursor()
     c.execute("""UPDATE thread
                  SET isDeleted = 1
                  WHERE id = %s""",
-              (kwargs['thread'],))
+              (args['thread'],))
     db.commit()
     c.close()
     ds.close_last()
 
-    return {'thread': kwargs['thread']}
+    return {'thread': args['thread']}
 
 
-def restore(ds, **kwargs):
-    required(['thread'], kwargs)
+def restore(ds, **args):
+    required(['thread'], args)
 
     db = ds.get_db()
     c = db.cursor()
     c.execute("""UPDATE thread
                  SET isDeleted = 0
                  WHERE id = %s""",
-              (kwargs['thread'],))
+              (args['thread'],))
     db.commit()
     c.close()
     ds.close_last()
 
-    return {'thread': kwargs['thread']}
+    return {'thread': args['thread']}
 
 
-def subscribe(ds, **kwargs):
-    required(['user', 'thread'], kwargs)
+def subscribe(ds, **args):
+    required(['user', 'thread'], args)
 
-    user_id = get_id_by_email(ds, kwargs['user'])
-    thread_id = kwargs['thread']
+    user_id = get_id_by_email(ds, args['user'])
+    thread_id = args['thread']
 
     db = ds.get_db()
     c = db.cursor()
@@ -196,16 +197,16 @@ def subscribe(ds, **kwargs):
     ds.close_last()
 
     return {
-        'thread': kwargs['thread'],
-        'user': kwargs['user']
+        'thread': args['thread'],
+        'user': args['user']
     }
 
 
-def unsubscribe(ds, **kwargs):
-    required(['user', 'thread'], kwargs)
+def unsubscribe(ds, **args):
+    required(['user', 'thread'], args)
 
-    user_id = get_id_by_email(ds, kwargs['user'])
-    thread_id = kwargs['thread']
+    user_id = get_id_by_email(ds, args['user'])
+    thread_id = args['thread']
 
     db = ds.get_db()
     c = db.cursor()
@@ -217,13 +218,13 @@ def unsubscribe(ds, **kwargs):
     ds.close_last()
 
     return {
-        'thread': kwargs['thread'],
-        'user': kwargs['user']
+        'thread': args['thread'],
+        'user': args['user']
     }
 
 
-def update(ds, **kwargs):
-    required(['message', 'slug', 'thread'], kwargs)
+def update(ds, **args):
+    required(['message', 'slug', 'thread'], args)
 
     db = ds.get_db()
     c = db.cursor()
@@ -231,13 +232,13 @@ def update(ds, **kwargs):
                  SET message = %s,
                      slug = %s
                  WHERE id = %s""",
-              (kwargs['message'], kwargs['slug'], kwargs['thread']))
+              (args['message'], args['slug'], args['thread']))
     db.commit()
     c.close()
     ds.close_last()
 
-    return details(ds, thread=kwargs['thread'])
+    return details(ds, thread=args['thread'])
 
 
-def vote(ds, **kwargs):
+def vote(ds, **args):
     pass
