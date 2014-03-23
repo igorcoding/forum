@@ -1,3 +1,4 @@
+from forumApi.api import post
 from forumApi.api.helpers.common_helper import *
 from forumApi.api.helpers.user_helper import *
 from forumApi.util.StringBuilder import StringBuilder
@@ -23,6 +24,8 @@ def create(ds, **kwargs):
     c.close()
     ds.close_last()
 
+    del user_data['password']
+
     return user_data
 
 
@@ -45,103 +48,72 @@ def details(ds, **kwargs):
 
     # getting subscriptions
     c = db.cursor()
-    subscriptions = []
+
     c.execute("""SELECT thread_id FROM subscriptions
                  WHERE user_id = %s""", (user_data['id'],))
-    for s in c:
-        subscriptions.append(s['thread_id'])
+    user_data['subscriptions'] = [s['thread_id'] for s in c]
+
     c.close()
     ds.close_last()
-
-    user_data['subscriptions'] = subscriptions
 
     return user_data
 
 
-def listFollowers(ds, handler=get_info_by_id, **kwargs):
+def list_followers_followees(ds, who, handler=get_info_by_id, **kwargs):
     required(['user'], kwargs)
     optional('limit', kwargs)
     optional('order', kwargs, 'desc', ['desc', 'asc'])
     optional('since_id', kwargs)
 
+    possibles = ['follower', 'followee']
+    val = 0 if who == 'follower' else 1
+
+    def next_val(v):
+        return (v + 1) % len(possibles)
+
     user_id = get_id_by_email(ds, kwargs['user'])
 
     query = StringBuilder()
-    query.append("""SELECT followers.follower FROM followers
-                    INNER JOIN user ON followers.follower = user.id
-                    WHERE followers.followee = %s AND unfollowed = 0""")
+    query.append("""SELECT %s FROM followers
+                    INNER JOIN user ON followers.%s = user.id
+                    WHERE %s """ % (possibles[val], possibles[val], possibles[next_val(val)])
+                 + """= %s AND unfollowed = 0""")
+
     params = (user_id, )
 
     if kwargs['since_id']:
-        query.append("""AND followers.follower > %s""")
+        query.append("""AND %s""" % (possibles[val],) + """>= %s""")
         params += (kwargs['since_id'],)
 
     if kwargs['order']:
         query.append("""ORDER BY user.name %s""" % kwargs['order'])
 
     if kwargs['limit']:
-        query.append("""LIMIT %s""")
-        params += (kwargs['limit'],)
+        query.append("""LIMIT %d""" % int(kwargs['limit']))
 
     db = ds.get_db()
     c = db.cursor()
     c.execute(str(query), params)
 
-    followers = []
-
-    for row in c:
-        info = handler(ds, row['follower'])
-        followers.append(info)
+    res = [handler(ds, row[possibles[val]]) for row in c]
 
     c.close()
     ds.close_last()
 
-    return followers
+    return res
+
+
+def listFollowers(ds, handler=get_info_by_id, **kwargs):
+    return list_followers_followees(ds, 'follower', handler, **kwargs)
 
 
 def listFollowing(ds, handler=get_info_by_id, **kwargs):
-    required(['user'], kwargs)
-    optional('limit', kwargs)
-    optional('order', kwargs, 'desc', ['desc', 'asc'])
-    optional('since_id', kwargs)
-
-    user_id = get_id_by_email(ds, kwargs['user'])
-
-    query = StringBuilder()
-    query.append("""SELECT followers.followee FROM followers
-                    INNER JOIN user ON followers.followee = user.id
-                    WHERE followers.followee = %s AND unfollowed = 0""")
-    params = (user_id, )
-
-    if kwargs['since_id']:
-        query.append("""AND followers.followee > %s""")
-        params += (kwargs['since_id'],)
-
-    if kwargs['order']:
-        query.append("""ORDER BY user.name %s""" % kwargs['order'])
-
-    if kwargs['limit']:
-        query.append("""LIMIT %s""")
-        params += (kwargs['limit'],)
-
-    db = ds.get_db()
-    c = db.cursor()
-    c.execute(str(query), params)
-
-    followees = []
-
-    for row in c:
-        info = handler(ds, row['followee'])
-        followees.append(info)
-
-    c.close()
-    ds.close_last()
-
-    return followees
+    return list_followers_followees(ds, 'followee', handler, **kwargs)
 
 
 def listPosts(ds, **kwargs):
-    pass
+    # TODO: date parameter problem
+    return post.list(ds, **kwargs)
 
 
 def follow(ds, **kwargs):

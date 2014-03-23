@@ -1,4 +1,7 @@
-from forumApi.api import user
+from forumApi.util.StringBuilder import StringBuilder
+import thread as threads
+import user
+import post as posts
 from forumApi.api.helpers.common_helper import *
 from forumApi.api.helpers.user_helper import get_id_by_email
 
@@ -45,13 +48,43 @@ def details(ds, **kwargs):
 
 
 def listPosts(ds, **kwargs):
-    pass
+    return posts.list(ds, **kwargs)
 
 
 def listThreads(ds, **kwargs):
-    pass
+    return threads.list(ds, **kwargs)
 
 
 def listUsers(ds, **kwargs):
-    pass
+    required(['forum'], kwargs)
+    optional('since_id', kwargs)
+    optional('limit', kwargs)
+    optional('order', kwargs, 'desc', ['desc', 'asc'])
+
+    query = StringBuilder()
+    query.append("""SELECT user FROM post
+                    WHERE forum = %s""")
+    params = (kwargs['forum'],)
+
+    if kwargs['since']:
+        query.append("""WHERE date >= %s""")
+        params += (kwargs['since'],)
+
+    if kwargs['order']:
+        query.append("""ORDER BY date %s""") % kwargs['order']
+
+    if kwargs['limit']:
+        query.append("""LIMIT %s""") % kwargs['limit']
+
+    db = ds.get_db()
+    c = db.cursor()
+    c.execute(str(query), params)
+
+    users_list = [details(ds, user=u['user']) for u in c]
+
+    c.close()
+    ds.close_last()
+
+    return users_list
+
 

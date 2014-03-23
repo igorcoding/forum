@@ -8,7 +8,7 @@ from forumApi.api import user
 from forumApi.api import thread
 from forumApi.api import post
 from forumApi.util.DataService import DataService
-from forumApi.util.helpers import response_good
+from forumApi.util.helpers import response_good, parse_get
 
 
 @csrf_exempt
@@ -20,7 +20,7 @@ def index(request, entity, action):
         "post": post
     }[entity]
 
-    data_dict = json.loads(request.body) if request.method == 'POST' else request.GET
+    data_dict = json.loads(request.body) if request.method == 'POST' else parse_get(request.GET)
     print data_dict
 
     func = getattr(entity, action)

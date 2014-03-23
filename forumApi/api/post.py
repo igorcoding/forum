@@ -1,7 +1,7 @@
 import forum
 from forumApi.util.StringBuilder import StringBuilder
 import thread
-from forumApi.api import user
+import user
 from forumApi.api.helpers.common_helper import required, optional, make_boolean, semi_required
 from forumApi.api.helpers.user_helper import get_id_by_email
 
@@ -67,10 +67,11 @@ def details(ds, **kwargs):
 
 
 def list(ds, **kwargs):
-    semi_required(['forum', 'thread'], kwargs)
+    semi_required(['forum', 'thread', 'user'], kwargs)
     optional('since', kwargs)
     optional('limit', kwargs)
     optional('order', kwargs, 'desc', ['desc', 'asc'])
+    optional('related', kwargs, [], ['user', 'forum'])
 
     query = StringBuilder()
     query.append("""SELECT id FROM post""")
@@ -78,23 +79,25 @@ def list(ds, **kwargs):
 
     if 'forum' in kwargs:
         query.append("""WHERE forum = %s""")
-        params += kwargs['forum']
+        params += (kwargs['forum'],)
 
     elif 'thread' in kwargs:
         query.append("""WHERE thread_id = %s""")
-        params += kwargs['thread']
+        params += (kwargs['thread'],)
+
+    elif 'user' in kwargs:
+        query.append("""WHERE user = %s""")
+        params += (kwargs['user'],)
 
     if kwargs['since']:
         query.append("""WHERE date >= %s""")
-        params += kwargs['since']
+        params += (kwargs['since'],)
 
     if kwargs['order']:
-        query.append("""ORDER BY date %s""")
-        params += kwargs['order']
+        query.append("""ORDER BY date %s""" % kwargs['order'])
 
     if kwargs['limit']:
-        query.append("""LIMIT %s""")
-        params += kwargs['limit']
+        query.append("""LIMIT %d""" % int(kwargs['limit']))
 
     db = ds.get_db()
     c = db.cursor()
@@ -102,7 +105,7 @@ def list(ds, **kwargs):
 
     posts = []
     for row in c:
-        posts.append(details(ds, post=row['id']))
+        posts.append(details(ds, post=row['id'], related=kwargs['related']))
 
     c.close()
     ds.close_last()
@@ -113,6 +116,7 @@ def list(ds, **kwargs):
 def remove(ds, **kwargs):
     required(['post'], kwargs)
 
+    # TODO: removing nested posts
     db = ds.get_db()
     c = db.cursor()
     c.execute("""UPDATE post

@@ -1,5 +1,7 @@
+from forumApi.util.StringBuilder import StringBuilder
 import user
-from forumApi.api import forum
+import forum
+import post
 from forumApi.api.helpers.common_helper import *
 from forumApi.api.helpers.forum_helper import get_id_by_short_name
 from forumApi.api.helpers.user_helper import get_id_by_email
@@ -8,6 +10,8 @@ from forumApi.api.helpers.user_helper import get_id_by_email
 def create(ds, **kwargs):
     required(['forum', 'title', 'isClosed', 'user', 'date', 'message', 'slug'], kwargs)
     optional('isDeleted', kwargs, False)
+
+    make_boolean(['isClosed', 'isDeleted'], kwargs)
 
     forum_id = get_id_by_short_name(ds, kwargs['forum'])
     user_id = get_id_by_email(ds, kwargs['user'])
@@ -55,6 +59,7 @@ def details(ds, **kwargs):
     ds.close_last()
 
     make_boolean(['isClosed', 'isDeleted'], thread_data)
+    thread_data['date'] = str(thread_data['date'])
 
     del thread_data['user_id']
     del thread_data['forum_id']
@@ -69,11 +74,50 @@ def details(ds, **kwargs):
 
 
 def list(ds, **kwargs):
-    pass
+    semi_required(['user', 'forum'], kwargs)
+    optional('since', kwargs)
+    optional('limit', kwargs)
+    optional('order', kwargs, 'desc', ['desc', 'asc'])
+    optional('related', kwargs, [], ['user', 'forum'])
+
+    query = StringBuilder()
+    query.append("""SELECT id FROM thread""")
+    params = ()
+
+    if 'user' in kwargs:
+        query.append("""WHERE user = %s""")
+        params += (kwargs['user'],)
+
+    elif 'forum' in kwargs:
+        query.append("""WHERE forum = %s""")
+        params += (kwargs['forum'],)
+
+    if kwargs['since']:
+        query.append("""WHERE date >= %s""")
+        params += (kwargs['since'],)
+
+    if kwargs['order']:
+        query.append("""ORDER BY date %s""" % kwargs['order'])
+
+    if kwargs['limit']:
+        query.append("""LIMIT %d""" % int(kwargs['limit']))
+
+    db = ds.get_db()
+    c = db.cursor()
+    c.execute(str(query), params)
+
+    threads = []
+    for row in c:
+        threads.append(details(ds, thread=row['id'], related=kwargs['related']))
+
+    c.close()
+    ds.close_last()
+
+    return threads
 
 
 def listPosts(ds, **kwargs):
-    pass
+    return post.list(ds, **kwargs)
 
 
 def open(ds, **kwargs):
