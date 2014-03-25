@@ -1,7 +1,7 @@
-from forum import settings
-
 import MySQLdb
 import MySQLdb.cursors
+
+from forum import settings
 
 
 class DataService:

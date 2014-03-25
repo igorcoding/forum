@@ -21,7 +21,7 @@ def get_email_by_id(ds, user_id):
 
 
 def get_info_by_id(ds, user_id):
-    from forumApi.api.user import details
+    from api.user import details
 
     email = get_email_by_id(ds, user_id)
     return details(ds, user=email)

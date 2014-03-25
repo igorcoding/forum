@@ -1,9 +1,9 @@
-from forumApi.util.StringBuilder import StringBuilder
-import thread as threads
-import user
 import post as posts
-from forumApi.api.helpers.common_helper import *
-from forumApi.api.helpers.user_helper import get_id_by_email
+import user
+import thread as threads
+from util.StringBuilder import *
+from helpers.common_helper import *
+from helpers.user_helper import get_id_by_email
 
 
 def create(ds, **args):
@@ -13,12 +13,17 @@ def create(ds, **args):
 
     db = ds.get_db()
     c = db.cursor()
-    c.execute("""INSERT INTO forum (name, short_name, user, user_id)
-                 VALUES (%s, %s, %s, %s)""",
-              (args['name'], args['short_name'], args['user'], user_id))
-    db.commit()
-    c.close()
-    ds.close_last()
+    try:
+        c.execute("""INSERT INTO forum (name, short_name, user, user_id)
+                     VALUES (%s, %s, %s, %s)""",
+                  (args['name'], args['short_name'], args['user'], user_id))
+        db.commit()
+    except Exception as e:
+        db.rollback()
+        raise e
+    finally:
+        c.close()
+        ds.close_last()
 
     return details(ds, forum=args['short_name'])
 
@@ -74,7 +79,7 @@ def listUsers(ds, **args):
         query.append("""ORDER BY date %s""") % args['order']
 
     if args['limit']:
-        query.append("""LIMIT %s""") % args['limit']
+        query.append("""LIMIT %d""") % int(args['limit'])
 
     db = ds.get_db()
     c = db.cursor()

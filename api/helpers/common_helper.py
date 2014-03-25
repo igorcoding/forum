@@ -39,3 +39,8 @@ def optional(param, args, default=None, possible_values=None):
 def make_boolean(params, arr):
     for param in params:
         arr[param] = bool(arr[param])
+
+
+def check_empty(res, message):
+    if not res or len(res) == 0:
+        raise Exception(message)

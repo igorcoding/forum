@@ -1,14 +1,14 @@
 import forum
-from forumApi.util.StringBuilder import StringBuilder
 import thread
 import user
-from forumApi.api.helpers.common_helper import required, optional, make_boolean, semi_required
-from forumApi.api.helpers.user_helper import get_id_by_email
+from util.StringBuilder import *
+from api.helpers.common_helper import required, optional, make_boolean, semi_required
+from api.helpers.user_helper import get_id_by_email
 
 
 def create(ds, **args):
     required(['date', 'thread', 'message', 'user', 'forum'], args)
-    optional('parent', args)
+    optional('parent', args, 0)
     optional('isApproved', args, False)
     optional('isHighlighted', args, False)
     optional('isEdited', args, False)
@@ -19,16 +19,21 @@ def create(ds, **args):
 
     db = ds.get_db()
     c = db.cursor()
-    c.execute("""INSERT INTO post (date, thread_id, message, user, user_id, forum, parent,
-                                   isApproved, isHighlighted, isEdited, isSpam, isDeleted)
-                 VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)""",
-              (args['date'], args['thread'], args['message'], args['user'], user_id,
-               args['forum'], args['parent'], args['isApproved'], args['isHighlighted'],
-               args['isEdited'], args['isSpam'], args['isDeleted']))
-    post_id = c.lastrowid
-    db.commit()
-    c.close()
-    ds.close_last()
+    try:
+        c.execute("""INSERT INTO post (date, thread_id, message, user, user_id, forum, parent,
+                                       isApproved, isHighlighted, isEdited, isSpam, isDeleted)
+                     VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)""",
+                  (args['date'], args['thread'], args['message'], args['user'], user_id,
+                   args['forum'], args['parent'], args['isApproved'], args['isHighlighted'],
+                   args['isEdited'], args['isSpam'], args['isDeleted']))
+        post_id = c.lastrowid
+        db.commit()
+    except Exception as e:
+        db.rollback()
+        raise e
+    finally:
+        c.close()
+        ds.close_last()
 
     return details(ds, post=post_id)
 
@@ -45,6 +50,7 @@ def details(ds, **args):
     c.close()
     ds.close_last()
 
+    post_data['date'] = str(post_data['date'])
     make_boolean(['isApproved', 'isDeleted', 'isEdited',
                   'isHighlighted', 'isSpam'], post_data)
 
@@ -120,13 +126,18 @@ def remove(ds, **args):
     # TODO: removing nested posts
     db = ds.get_db()
     c = db.cursor()
-    c.execute("""UPDATE post
-                 SET isDeleted = 1
-                 WHERE id = %s""",
-              (args['post'],))
-    db.commit()
-    c.close()
-    ds.close_last()
+    try:
+        c.execute("""UPDATE post
+                     SET isDeleted = 1
+                     WHERE id = %s""",
+                  (args['post'],))
+        db.commit()
+    except Exception as e:
+        db.rollback()
+        raise e
+    finally:
+        c.close()
+        ds.close_last()
 
     return {'post': args['post']}
 
@@ -136,13 +147,18 @@ def restore(ds, **args):
 
     db = ds.get_db()
     c = db.cursor()
-    c.execute("""UPDATE post
-                 SET isDeleted = 0
-                 WHERE id = %s""",
-              (args['post'],))
-    db.commit()
-    c.close()
-    ds.close_last()
+    try:
+        c.execute("""UPDATE post
+                     SET isDeleted = 0
+                     WHERE id = %s""",
+                  (args['post'],))
+        db.commit()
+    except Exception as e:
+        db.rollback()
+        raise e
+    finally:
+        c.close()
+        ds.close_last()
 
     return {'post': args['post']}
 
@@ -152,13 +168,18 @@ def update(ds, **args):
 
     db = ds.get_db()
     c = db.cursor()
-    c.execute("""UPDATE post
-                 SET message = %s
-                 WHERE id = %s""",
-              (args['message'], args['post']))
-    db.commit()
-    c.close()
-    ds.close_last()
+    try:
+        c.execute("""UPDATE post
+                     SET message = %s
+                     WHERE id = %s""",
+                  (args['message'], args['post']))
+        db.commit()
+    except Exception as e:
+        db.rollback()
+        raise e
+    finally:
+        c.close()
+        ds.close_last()
 
     return details(ds, post=int(args['post']))
 

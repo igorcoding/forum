@@ -1,10 +1,10 @@
-from forumApi.util.StringBuilder import StringBuilder
-import user
 import forum
 import post
-from forumApi.api.helpers.common_helper import *
-from forumApi.api.helpers.forum_helper import get_id_by_short_name
-from forumApi.api.helpers.user_helper import get_id_by_email
+import user
+from util.StringBuilder import *
+from api.helpers.common_helper import *
+from api.helpers.forum_helper import get_id_by_short_name
+from api.helpers.user_helper import get_id_by_email
 
 
 def create(ds, **args):
@@ -18,14 +18,19 @@ def create(ds, **args):
 
     db = ds.get_db()
     c = db.cursor()
-    c.execute("""INSERT INTO thread (forum, forum_id, title, isClosed, user, user_id, date, message, slug, isDeleted)
-                 VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)""",
-              (args['forum'], forum_id, args['title'], int(args['isClosed']), args['user'],
-               user_id, args['date'], args['message'], args['slug'], int(args['isDeleted'])))
-    thread_id = c.lastrowid
-    db.commit()
-    c.close()
-    ds.close_last()
+    try:
+        c.execute("""INSERT INTO thread (forum, forum_id, title, isClosed, user, user_id, date, message, slug, isDeleted)
+                     VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)""",
+                  (args['forum'], forum_id, args['title'], int(args['isClosed']), args['user'],
+                   user_id, args['date'], args['message'], args['slug'], int(args['isDeleted'])))
+        thread_id = c.lastrowid
+        db.commit()
+    except Exception as e:
+        db.rollback()
+        raise e
+    finally:
+        c.close()
+        ds.close_last()
 
     return details(ds, thread=thread_id)
 
@@ -35,13 +40,19 @@ def close(ds, **args):
 
     db = ds.get_db()
     c = db.cursor()
-    c.execute("""UPDATE thread
-                 SET isClosed = 1
-                 WHERE id = %s""",
-              (args['thread'],))
-    db.commit()
-    c.close()
-    ds.close_last()
+
+    try:
+        c.execute("""UPDATE thread
+                     SET isClosed = 1
+                     WHERE id = %s""",
+                  (args['thread'],))
+        db.commit()
+    except Exception as e:
+        db.rollback()
+        raise e
+    finally:
+        c.close()
+        ds.close_last()
 
     return {'thread': args['thread']}
 
@@ -57,6 +68,8 @@ def details(ds, **args):
     thread_data = c.fetchone()
     c.close()
     ds.close_last()
+
+    check_empty(thread_data, "No thread found with that id")
 
     make_boolean(['isClosed', 'isDeleted'], thread_data)
     thread_data['date'] = str(thread_data['date'])
@@ -126,13 +139,18 @@ def open(ds, **args):
 
     db = ds.get_db()
     c = db.cursor()
-    c.execute("""UPDATE thread
-                 SET isClosed = 0
-                 WHERE id = %s""",
-              (args['thread'],))
-    db.commit()
-    c.close()
-    ds.close_last()
+    try:
+        c.execute("""UPDATE thread
+                     SET isClosed = 0
+                     WHERE id = %s""",
+                  (args['thread'],))
+        db.commit()
+    except Exception as e:
+        db.rollback()
+        raise e
+    finally:
+        c.close()
+        ds.close_last()
 
     return {'thread': args['thread']}
 
@@ -142,13 +160,22 @@ def remove(ds, **args):
 
     db = ds.get_db()
     c = db.cursor()
-    c.execute("""UPDATE thread
-                 SET isDeleted = 1
-                 WHERE id = %s""",
-              (args['thread'],))
-    db.commit()
-    c.close()
-    ds.close_last()
+    try:
+        c.execute("""UPDATE thread
+                     SET isDeleted = 1
+                     WHERE id = %s""",
+                  (args['thread'],))
+        c.execute("""UPDATE post
+                     SET isDeleted = 1
+                     WHERE thread_id = %s""",
+                  (args['thread'],))
+        db.commit()
+    except Exception as e:
+        db.rollback()
+        raise e
+    finally:
+        c.close()
+        ds.close_last()
 
     return {'thread': args['thread']}
 
@@ -158,13 +185,24 @@ def restore(ds, **args):
 
     db = ds.get_db()
     c = db.cursor()
-    c.execute("""UPDATE thread
-                 SET isDeleted = 0
-                 WHERE id = %s""",
-              (args['thread'],))
-    db.commit()
-    c.close()
-    ds.close_last()
+    try:
+        c.execute("""UPDATE thread
+                     SET isDeleted = 0
+                     WHERE id = %s""",
+                  (args['thread'],))
+
+        # TODO: posts can be deleted not only because of threads
+        c.execute("""UPDATE post
+                     SET isDeleted = 0
+                     WHERE thread_id = %s""",
+                  (args['thread'],))
+        db.commit()
+    except Exception as e:
+        db.rollback()
+        raise e
+    finally:
+        c.close()
+        ds.close_last()
 
     return {'thread': args['thread']}
 
@@ -191,10 +229,15 @@ def subscribe(ds, **args):
                    VALUES (%s, %s)"""
 
     c = db.cursor()
-    c.execute(query, (user_id, thread_id))
-    db.commit()
-    c.close()
-    ds.close_last()
+    try:
+        c.execute(query, (user_id, thread_id))
+        db.commit()
+    except Exception as e:
+        db.rollback()
+        raise e
+    finally:
+        c.close()
+        ds.close_last()
 
     return {
         'thread': args['thread'],
@@ -210,12 +253,17 @@ def unsubscribe(ds, **args):
 
     db = ds.get_db()
     c = db.cursor()
-    c.execute("""UPDATE subscriptions SET unsubscribed = 1
-               WHERE user_id = %s AND thread_id = %s""",
-              (user_id, thread_id))
-    db.commit()
-    c.close()
-    ds.close_last()
+    try:
+        c.execute("""UPDATE subscriptions SET unsubscribed = 1
+                   WHERE user_id = %s AND thread_id = %s""",
+                  (user_id, thread_id))
+        db.commit()
+    except Exception as e:
+        db.rollback()
+        raise e
+    finally:
+        c.close()
+        ds.close_last()
 
     return {
         'thread': args['thread'],
@@ -228,14 +276,19 @@ def update(ds, **args):
 
     db = ds.get_db()
     c = db.cursor()
-    c.execute("""UPDATE thread
-                 SET message = %s,
-                     slug = %s
-                 WHERE id = %s""",
-              (args['message'], args['slug'], args['thread']))
-    db.commit()
-    c.close()
-    ds.close_last()
+    try:
+        c.execute("""UPDATE thread
+                     SET message = %s,
+                         slug = %s
+                     WHERE id = %s""",
+                  (args['message'], args['slug'], args['thread']))
+        db.commit()
+    except Exception as e:
+        db.rollback()
+        raise e
+    finally:
+        c.close()
+        ds.close_last()
 
     return details(ds, thread=args['thread'])
 
