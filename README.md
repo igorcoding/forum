@@ -1,3 +1,3 @@
 forum
 =====
-API for forum database. Django project
+API for forum database.
