@@ -2,7 +2,7 @@ import json
 import logging
 import threading
 import time
-from api.util.DataService import DataService
+from api import api_executor
 from api.util.response_helpers import *
 
 from tornado import web
@@ -48,29 +48,7 @@ class Handler(ThreadMixin):
     res = None
 
     def _worker(self):
-        from api import forum
-        from api import thread
-        from api import user
-        from api import post
-        entity = {
-            "forum": forum,
-            "user": user,
-            "thread": thread,
-            "post": post
-        }[self.entity]
-
-        print self.data
-
-        func = getattr(entity, self.action)
-
-        ds = DataService()
-        try:
-            result = func(ds, **self.data)
-            response = response_good(result)
-        except Exception as e:
-            response = response_error(str(e))
-        ds.close_all()
-        self.res = response
+        self.res = api_executor.execute(self.entity, self.action, self.data)
 
     @tornado.web.asynchronous
     def get(self, entity, action):

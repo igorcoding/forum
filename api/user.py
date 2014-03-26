@@ -50,8 +50,8 @@ def details(ds, **args):
 
     make_boolean(['isAnonymous'], user_data)
 
-    user_data['followers'] = listFollowers(ds, handler=get_email_by_id, user=args['user'])
-    user_data['followees'] = listFollowing(ds, handler=get_email_by_id, user=args['user'])
+    user_data['followers'] = listFollowers(ds, handler=echo_email, user=args['user'])
+    user_data['followees'] = listFollowing(ds, handler=echo_email, user=args['user'])
 
     del user_data['password']
 
@@ -68,7 +68,7 @@ def details(ds, **args):
     return user_data
 
 
-def list_followers_followees(ds, who, handler=get_info_by_id, **args):
+def list_followers_followees(ds, who, handler, **args):
     required(['user'], args)
     optional('limit', args)
     optional('order', args, 'desc', ['desc', 'asc'])
@@ -83,9 +83,9 @@ def list_followers_followees(ds, who, handler=get_info_by_id, **args):
     user_id = get_id_by_email(ds, args['user'])
 
     query = StringBuilder()
-    query.append("""SELECT %s FROM followers
+    query.append("""SELECT email FROM followers
                     INNER JOIN user ON followers.%s = user.id
-                    WHERE %s """ % (possibles[val], possibles[val], possibles[next_val(val)])
+                    WHERE %s """ % (possibles[val], possibles[next_val(val)])
                  + """= %s AND unfollowed = 0""")
 
     params = (user_id, )
@@ -104,7 +104,7 @@ def list_followers_followees(ds, who, handler=get_info_by_id, **args):
     c = db.cursor()
     c.execute(str(query), params)
 
-    res = [handler(ds, row[possibles[val]]) for row in c]
+    res = [handler(ds, row['email']) for row in c]
 
     c.close()
     ds.close_last()
@@ -112,11 +112,11 @@ def list_followers_followees(ds, who, handler=get_info_by_id, **args):
     return res
 
 
-def listFollowers(ds, handler=get_info_by_id, **args):
+def listFollowers(ds, handler=get_info_by_email, **args):
     return list_followers_followees(ds, 'follower', handler, **args)
 
 
-def listFollowing(ds, handler=get_info_by_id, **args):
+def listFollowing(ds, handler=get_info_by_email, **args):
     return list_followers_followees(ds, 'followee', handler, **args)
 
 

@@ -32,6 +32,7 @@ def create(ds, **args):
         c.close()
         ds.close_last()
 
+    # TODO: get rid off details
     return details(ds, thread=thread_id)
 
 
@@ -294,4 +295,36 @@ def update(ds, **args):
 
 
 def vote(ds, **args):
-    pass
+    required(['vote', 'thread'], args)
+    args['vote'] = int(args['vote'])
+
+    db = ds.get_db()
+    c = db.cursor()
+    try:
+        if args['vote'] > 0:
+            c.execute("""UPDATE thread
+                         SET likes = likes + 1
+                         WHERE id = %s""",
+                      (args['thread'],))
+        elif args['vote'] < 0:
+            c.execute("""UPDATE thread
+                         SET dislikes = dislikes + 1
+                         WHERE id = %s""",
+                      (args['thread'],))
+        else:
+            raise Exception("Vote is not allowed to be 0")
+
+        c.execute("""UPDATE thread
+                     SET points = likes - dislikes
+                     WHERE id = %s""",
+                  (args['thread'],))
+
+        db.commit()
+    except Exception as e:
+        db.rollback()
+        raise e
+    finally:
+        c.close()
+        ds.close_last()
+
+    return details(ds, thread=args['thread'])

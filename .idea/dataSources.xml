@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
-  <component name="DataSourceManagerImpl" format="xml" hash="1670196000">
-    <data-source source="LOCAL" name="Django default" uuid="c3def699-6238-4976-bf21-627e69bc61a1">
+  <component name="DataSourceManagerImpl" format="xml" hash="1909812995">
+    <data-source source="LOCAL" name="forum_db" uuid="c3def699-6238-4976-bf21-627e69bc61a1">
       <driver-ref>mysql</driver-ref>
       <jdbc-driver>com.mysql.jdbc.Driver</jdbc-driver>
       <jdbc-url>jdbc:mysql://127.0.0.1:3306/forum_db</jdbc-url>

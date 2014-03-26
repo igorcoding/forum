@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <component name="dataSourceStorage">
-  <data-source source="LOCAL" name="Django default" uuid="c3def699-6238-4976-bf21-627e69bc61a1">
+  <data-source source="LOCAL" name="forum_db" uuid="c3def699-6238-4976-bf21-627e69bc61a1">
     <database-info product="MySQL" version="5.5.35-0ubuntu0.13.10.2" jdbc-version="4.0" driver-name="MySQL Connector Java" driver-version="mysql-connector-java-5.1.26 ( Revision: ${bzr.revision-id} )">
       <extra-name-characters>#@</extra-name-characters>
       <identifier-quote-string>`</identifier-quote-string>
@@ -40,15 +40,15 @@
       <column name="isHighlighted" sqlType="TINYINT UNSIGNED" length="3" precision="0" nullable="false" jdbcType="-6"/>
       <column name="isSpam" sqlType="TINYINT UNSIGNED" length="3" precision="0" nullable="false" jdbcType="-6"/>
       <column name="message" sqlType="MEDIUMTEXT" length="16777215" precision="0" nullable="false" jdbcType="-1"/>
-      <column name="parent" sqlType="BIGINT UNSIGNED" length="20" precision="0" nullable="false" jdbcType="-5"/>
-      <column name="points" sqlType="INT UNSIGNED" length="10" precision="0" nullable="false" jdbcType="4"/>
+      <column name="parent" sqlType="BIGINT" length="19" precision="0" nullable="false" jdbcType="-5" def="MA=="/>
+      <column name="points" sqlType="INT" length="10" precision="0" nullable="false" jdbcType="4" def="MA=="/>
       <column name="forum" sqlType="VARCHAR" length="255" precision="0" nullable="false" jdbcType="12"/>
       <column name="user" sqlType="VARCHAR" length="255" precision="0" nullable="false" jdbcType="12"/>
       <column name="user_id" sqlType="BIGINT UNSIGNED" length="20" precision="0" nullable="false" jdbcType="-5"/>
       <column name="thread_id" sqlType="BIGINT UNSIGNED" length="20" precision="0" nullable="false" jdbcType="-5"/>
       <primary-key name="PRIMARY" columns="id,user_id,thread_id"/>
-      <foreign-key name="fk_post_user1" columns="user_id" ref-table="user" ref-schema="" ref-catalog="forum_db" ref-columns="id" update-rule="3" delete-rule="3" deferrability="2"/>
       <foreign-key name="fk_post_thread1" columns="thread_id" ref-table="thread" ref-schema="" ref-catalog="forum_db" ref-columns="id" update-rule="3" delete-rule="3" deferrability="2"/>
+      <foreign-key name="fk_post_user1" columns="user_id" ref-table="user" ref-schema="" ref-catalog="forum_db" ref-columns="id" update-rule="3" delete-rule="3" deferrability="2"/>
       <index name="fk_post_thread1_idx" unique="false" columns="thread_id"/>
       <index name="fk_post_user1_idx" unique="false" columns="user_id"/>
     </table>
@@ -57,8 +57,8 @@
       <column name="thread_id" sqlType="BIGINT UNSIGNED" length="20" precision="0" nullable="false" jdbcType="-5"/>
       <column name="unsubscribed" sqlType="TINYINT" length="3" precision="0" nullable="false" jdbcType="-6"/>
       <primary-key name="PRIMARY" columns="user_id,thread_id"/>
-      <foreign-key name="fk_userId_to_user_id" columns="user_id" ref-table="user" ref-schema="" ref-catalog="forum_db" ref-columns="id" update-rule="3" delete-rule="3" deferrability="2"/>
       <foreign-key name="fk_threadId_to_thread_id" columns="thread_id" ref-table="thread" ref-schema="" ref-catalog="forum_db" ref-columns="id" update-rule="3" delete-rule="3" deferrability="2"/>
+      <foreign-key name="fk_userId_to_user_id" columns="user_id" ref-table="user" ref-schema="" ref-catalog="forum_db" ref-columns="id" update-rule="3" delete-rule="3" deferrability="2"/>
       <index name="fk_user_subscribed_thread1_idx" unique="false" columns="thread_id"/>
       <index name="fk_userId_to_user_id_idx" unique="false" columns="user_id"/>
     </table>
@@ -76,6 +76,8 @@
       <column name="forum" sqlType="VARCHAR" length="255" precision="0" nullable="false" jdbcType="12"/>
       <column name="forum_id" sqlType="BIGINT UNSIGNED" length="20" precision="0" nullable="false" jdbcType="-5"/>
       <column name="user_id" sqlType="BIGINT UNSIGNED" length="20" precision="0" nullable="false" jdbcType="-5"/>
+      <column name="posts" sqlType="INT UNSIGNED" length="10" precision="0" nullable="false" jdbcType="4" def="MA=="/>
+      <column name="points" sqlType="INT UNSIGNED" length="10" precision="0" nullable="false" jdbcType="4" def="MA=="/>
       <primary-key name="PRIMARY" columns="id,forum_id,user_id"/>
       <foreign-key name="fk_thread_forum1" columns="forum_id" ref-table="forum" ref-schema="" ref-catalog="forum_db" ref-columns="id" update-rule="3" delete-rule="3" deferrability="2"/>
       <foreign-key name="fk_thread_user1" columns="user_id" ref-table="user" ref-schema="" ref-catalog="forum_db" ref-columns="id" update-rule="3" delete-rule="3" deferrability="2"/>

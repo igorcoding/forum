@@ -17,6 +17,8 @@ def create(ds, **args):
         c.execute("""INSERT INTO forum (name, short_name, user, user_id)
                      VALUES (%s, %s, %s, %s)""",
                   (args['name'], args['short_name'], args['user'], user_id))
+
+        c.execute("""UPDATE thread SET posts = posts + 1""")
         db.commit()
     except Exception as e:
         db.rollback()
@@ -39,6 +41,8 @@ def details(ds, **args):
     forum_data = c.fetchone()
     c.close()
     ds.close_last()
+
+    check_empty(forum_data, "No forum found with that short_name")
 
     email = forum_data['user']
     if 'user' in args['related']:
@@ -76,10 +80,10 @@ def listUsers(ds, **args):
         params += (args['since'],)
 
     if args['order']:
-        query.append("""ORDER BY date %s""") % args['order']
+        query.append("""ORDER BY date %s""" % args['order'])
 
     if args['limit']:
-        query.append("""LIMIT %d""") % int(args['limit'])
+        query.append("""LIMIT %d""" % int(args['limit']))
 
     db = ds.get_db()
     c = db.cursor()

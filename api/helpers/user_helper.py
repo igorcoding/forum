@@ -20,10 +20,19 @@ def get_email_by_id(ds, user_id):
     return email
 
 
+def echo_email(ds, email):
+    return email
+
+
 def get_info_by_id(ds, user_id):
     from api.user import details
 
     email = get_email_by_id(ds, user_id)
+    return details(ds, user=email)
+
+
+def get_info_by_email(ds, email):
+    from api.user import details
     return details(ds, user=email)
 
 

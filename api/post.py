@@ -2,7 +2,7 @@ import forum
 import thread
 import user
 from util.StringBuilder import *
-from api.helpers.common_helper import required, optional, make_boolean, semi_required
+from api.helpers.common_helper import required, optional, make_boolean, semi_required, check_empty
 from api.helpers.user_helper import get_id_by_email
 
 
@@ -49,6 +49,8 @@ def details(ds, **args):
     post_data = c.fetchone()
     c.close()
     ds.close_last()
+
+    check_empty(post_data, "No post found with that id")
 
     post_data['date'] = str(post_data['date'])
     make_boolean(['isApproved', 'isDeleted', 'isEdited',
@@ -123,7 +125,6 @@ def list(ds, orderby='date', **args):
 def remove(ds, **args):
     required(['post'], args)
 
-    # TODO: removing nested posts
     db = ds.get_db()
     c = db.cursor()
     try:
@@ -185,4 +186,36 @@ def update(ds, **args):
 
 
 def vote(ds, **args):
-    pass
+    required(['vote', 'post'], args)
+    args['vote'] = int(args['vote'])
+
+    db = ds.get_db()
+    c = db.cursor()
+    try:
+        if args['vote'] > 0:
+            c.execute("""UPDATE post
+                         SET likes = likes + 1
+                         WHERE id = %s""",
+                      (args['post'],))
+        elif args['vote'] < 0:
+            c.execute("""UPDATE post
+                         SET dislikes = dislikes + 1
+                         WHERE id = %s""",
+                      (args['post'],))
+        else:
+            raise Exception("Vote is not allowed to be 0")
+
+        c.execute("""UPDATE post
+                     SET points = likes - dislikes
+                     WHERE id = %s""",
+                  (args['post'],))
+
+        db.commit()
+    except Exception as e:
+        db.rollback()
+        raise e
+    finally:
+        c.close()
+        ds.close_last()
+
+    return details(ds, post=args['post'])
