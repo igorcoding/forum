@@ -2,8 +2,8 @@ import post as posts
 import user
 import thread as threads
 from util.StringBuilder import *
-from helpers.common_helper import *
-from helpers.user_helper import get_id_by_email
+from api_helpers.common_helper import *
+from api_helpers.user_helper import get_id_by_email
 
 
 def create(ds, **args):

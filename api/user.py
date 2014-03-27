@@ -1,12 +1,11 @@
 import time
 import post
-from api.helpers.common_helper import *
-from api.helpers.user_helper import *
+from api.api_helpers.common_helper import *
+from api.api_helpers.user_helper import *
 from util.StringBuilder import *
 
 
 def create(ds, **args):
-    time.sleep(5)
     required(['username', 'name', 'email', 'about'], args)
     optional('isAnonymous', args, False)
 

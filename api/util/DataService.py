@@ -5,15 +5,32 @@ from forum import settings
 
 
 class DataService:
-    def __init__(self):
-        default_db = settings.DATABASES['default']
+    def __init__(self, config_file='api/db.ini'):
+        config = DataService.parse_config(config_file)
 
-        self.host = default_db['HOST']
-        self.port = int(default_db['PORT'])
-        self.db_name = default_db['NAME']
-        self.username = default_db['USER']
-        self.password = default_db['PASSWORD']
+        self.host = config['host']
+        self.port = int(config['port'])
+        self.db_name = config['database']
+        self.username = config['username']
+        self.password = config['password']
         self.opened_connections = []
+
+    @staticmethod
+    def parse_config(config_file):
+        from ConfigParser import ConfigParser
+        config = ConfigParser()
+        config.read(config_file)
+        section = 'Connection'
+
+        res = {}
+        options = config.options(section)
+        for option in options:
+            try:
+                res[option] = config.get(section, option)
+            except:
+                print "exception on %s!" % option
+                res[option] = None
+        return res
 
     def connect(self):
         db = MySQLdb.connect(host=self.host,
