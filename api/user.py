@@ -22,7 +22,9 @@ def create(ds, **args):
         raise e
     finally:
         c.close()
+        ds.close_last()
 
+    db = ds.get_db()
     c = db.cursor()
     c.execute("""SELECT * FROM user
                WHERE email = %s""", (args['email'],))
