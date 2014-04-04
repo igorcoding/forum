@@ -13,15 +13,16 @@ DROP TABLE IF EXISTS `forum_db`.`user` ;
 
 CREATE TABLE IF NOT EXISTS `forum_db`.`user` (
   `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
-  `username` VARCHAR(255) NOT NULL,
+  `username` VARCHAR(255) NULL,
   `password` VARCHAR(255) NOT NULL,
   `email` VARCHAR(255) NOT NULL,
   `name` VARCHAR(255) NULL,
-  `isAnonymous` TINYINT UNSIGNED NOT NULL,
+  `isAnonymous` TINYINT UNSIGNED NOT NULL DEFAULT 0,
   `about` VARCHAR(255) NULL,
   PRIMARY KEY (`id`),
   UNIQUE INDEX `email_UNIQUE` (`email` ASC),
-  UNIQUE INDEX `username_UNIQUE` (`username` ASC))
+  UNIQUE INDEX `username_UNIQUE` (`username` ASC),
+  INDEX `email_INDEX` (`email` ASC))
 ENGINE = InnoDB;
 
 
@@ -39,6 +40,8 @@ CREATE TABLE IF NOT EXISTS `forum_db`.`forum` (
   PRIMARY KEY (`id`, `user_id`),
   UNIQUE INDEX `short_name_UNIQUE` (`short_name` ASC),
   INDEX `fk_forum_user1_idx` (`user_id` ASC),
+  INDEX `short_name_INDEX` (`short_name` ASC),
+  INDEX `user_INDEX` (`user` ASC),
   CONSTRAINT `fk_forum_user1`
     FOREIGN KEY (`user_id`)
     REFERENCES `forum_db`.`user` (`id`)
@@ -55,13 +58,15 @@ DROP TABLE IF EXISTS `forum_db`.`thread` ;
 CREATE TABLE IF NOT EXISTS `forum_db`.`thread` (
   `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
   `date` DATETIME NOT NULL,
-  `dislikes` INT UNSIGNED NOT NULL DEFAULT 0,
-  `likes` INT UNSIGNED NOT NULL DEFAULT 0,
-  `isClosed` TINYINT UNSIGNED NOT NULL,
-  `isDeleted` TINYINT UNSIGNED NOT NULL,
+  `isClosed` TINYINT UNSIGNED NOT NULL DEFAULT 0,
+  `isDeleted` TINYINT UNSIGNED NOT NULL DEFAULT 0,
   `title` VARCHAR(255) NOT NULL,
   `slug` VARCHAR(255) NOT NULL,
+  `posts` INT UNSIGNED NOT NULL DEFAULT 0,
   `message` MEDIUMTEXT NOT NULL,
+  `likes` INT UNSIGNED NOT NULL DEFAULT 0,
+  `dislikes` INT UNSIGNED NOT NULL DEFAULT 0,
+  `points` INT UNSIGNED NOT NULL DEFAULT 0,
   `user` VARCHAR(255) NOT NULL,
   `forum` VARCHAR(255) NOT NULL,
   `forum_id` BIGINT UNSIGNED NOT NULL,
@@ -70,6 +75,8 @@ CREATE TABLE IF NOT EXISTS `forum_db`.`thread` (
   UNIQUE INDEX `slug_UNIQUE` (`slug` ASC),
   INDEX `fk_thread_forum1_idx` (`forum_id` ASC),
   INDEX `fk_thread_user1_idx` (`user_id` ASC),
+  INDEX `user_INDEX` (`user` ASC),
+  INDEX `forum_INDEX` (`forum` ASC),
   CONSTRAINT `fk_thread_forum1`
     FOREIGN KEY (`forum_id`)
     REFERENCES `forum_db`.`forum` (`id`)
@@ -93,14 +100,14 @@ CREATE TABLE IF NOT EXISTS `forum_db`.`post` (
   `date` DATETIME NOT NULL,
   `dislikes` INT UNSIGNED NOT NULL DEFAULT 0,
   `likes` INT UNSIGNED NOT NULL DEFAULT 0,
-  `isApproved` TINYINT UNSIGNED NOT NULL,
-  `isDeleted` TINYINT UNSIGNED NOT NULL,
-  `isEdited` TINYINT UNSIGNED NOT NULL,
-  `isHighlighted` TINYINT UNSIGNED NOT NULL,
-  `isSpam` TINYINT UNSIGNED NOT NULL,
+  `isApproved` TINYINT UNSIGNED NOT NULL DEFAULT 0,
+  `isDeleted` TINYINT UNSIGNED NOT NULL DEFAULT 0,
+  `isEdited` TINYINT UNSIGNED NOT NULL DEFAULT 0,
+  `isHighlighted` TINYINT UNSIGNED NOT NULL DEFAULT 0,
+  `isSpam` TINYINT UNSIGNED NOT NULL DEFAULT 0,
   `message` MEDIUMTEXT NOT NULL,
-  `parent` BIGINT UNSIGNED NOT NULL,
-  `points` INT UNSIGNED NOT NULL,
+  `parent` BIGINT UNSIGNED NULL,
+  `points` INT UNSIGNED NOT NULL DEFAULT 0,
   `forum` VARCHAR(255) NOT NULL,
   `user` VARCHAR(255) NOT NULL,
   `user_id` BIGINT UNSIGNED NOT NULL,
@@ -108,6 +115,9 @@ CREATE TABLE IF NOT EXISTS `forum_db`.`post` (
   PRIMARY KEY (`id`, `user_id`, `thread_id`),
   INDEX `fk_post_user1_idx` (`user_id` ASC),
   INDEX `fk_post_thread1_idx` (`thread_id` ASC),
+  INDEX `fk_post_parent_1_idx` (`parent` ASC),
+  INDEX `user_INDEX` (`user` ASC),
+  INDEX `forum_INDEX` (`forum` ASC),
   CONSTRAINT `fk_post_user1`
     FOREIGN KEY (`user_id`)
     REFERENCES `forum_db`.`user` (`id`)
@@ -117,6 +127,11 @@ CREATE TABLE IF NOT EXISTS `forum_db`.`post` (
     FOREIGN KEY (`thread_id`)
     REFERENCES `forum_db`.`thread` (`id`)
     ON DELETE RESTRICT
+    ON UPDATE NO ACTION,
+  CONSTRAINT `fk_post_parent_1`
+    FOREIGN KEY (`parent`)
+    REFERENCES `forum_db`.`post` (`id`)
+    ON DELETE NO ACTION
     ON UPDATE NO ACTION)
 ENGINE = InnoDB;
 
