@@ -12,7 +12,7 @@ def create(ds, **args):
     db = ds.get_db()
     c = db.cursor()
     try:
-        c.execute("""INSERT INTO user (username, name, email, about, isAnonymous, password)
+        c.execute(u"""INSERT INTO user (username, name, email, about, isAnonymous, password)
                      VALUES (%s, %s, %s, %s, %s, %s)""",
                   (args['username'], args['name'], args['email'],
                    args['about'], int(args['isAnonymous']), '123456'))
@@ -26,7 +26,7 @@ def create(ds, **args):
 
     db = ds.get_db()
     c = db.cursor()
-    c.execute("""SELECT * FROM user
+    c.execute(u"""SELECT * FROM user
                WHERE email = %s""", (args['email'],))
     user_data = c.fetchone()
     c.close()
@@ -42,24 +42,24 @@ def details(ds, **args):
 
     db = ds.get_db()
     c = db.cursor()
-    c.execute("""SELECT * FROM user
+    c.execute(u"""SELECT * FROM user
                WHERE email = %s""", (args['user'],))
     user_data = c.fetchone()
     c.close()
 
-    check_empty(user_data, "No user found with that email")
+    check_empty(user_data, u"No user found with that email")
 
     make_boolean(['isAnonymous'], user_data)
 
     user_data['followers'] = listFollowers(ds, handler=echo_email, user=args['user'])
-    user_data['followees'] = listFollowing(ds, handler=echo_email, user=args['user'])
+    user_data['following'] = listFollowing(ds, handler=echo_email, user=args['user'])
 
     del user_data['password']
 
     # getting subscriptions
     c = db.cursor()
 
-    c.execute("""SELECT thread_id FROM subscriptions
+    c.execute(u"""SELECT thread_id FROM subscriptions
                  WHERE user_id = %s""", (user_data['id'],))
     user_data['subscriptions'] = [s['thread_id'] for s in c]
 
@@ -69,7 +69,7 @@ def details(ds, **args):
     return user_data
 
 
-def list_followers_followees(ds, who, handler, **args):
+def list_followers_following(ds, who, handler, **args):
     required(['user'], args)
     optional('limit', args)
     optional('order', args, 'desc', ['desc', 'asc'])
@@ -84,22 +84,22 @@ def list_followers_followees(ds, who, handler, **args):
     user_id = get_id_by_email(ds, args['user'])
 
     query = StringBuilder()
-    query.append("""SELECT email FROM followers
+    query.append(u"""SELECT email FROM followers
                     INNER JOIN user ON followers.%s = user.id
                     WHERE %s """ % (possibles[val], possibles[next_val(val)])
-                 + """= %s AND unfollowed = 0""")
+                 + u"""= %s AND unfollowed = 0""")
 
     params = (user_id, )
 
     if args['since_id']:
-        query.append("""AND %s """ % (possibles[val],) + """>= %s""")
+        query.append(u"""AND %s """ % (possibles[val],) + u""">= %s""")
         params += (args['since_id'],)
 
     if args['order']:
-        query.append("""ORDER BY user.name %s""" % args['order'])
+        query.append(u"""ORDER BY user.name %s""" % args['order'])
 
     if args['limit']:
-        query.append("""LIMIT %d""" % int(args['limit']))
+        query.append(u"""LIMIT %d""" % int(args['limit']))
 
     db = ds.get_db()
     c = db.cursor()
@@ -114,11 +114,11 @@ def list_followers_followees(ds, who, handler, **args):
 
 
 def listFollowers(ds, handler=get_info_by_email, **args):
-    return list_followers_followees(ds, 'follower', handler, **args)
+    return list_followers_following(ds, 'follower', handler, **args)
 
 
 def listFollowing(ds, handler=get_info_by_email, **args):
-    return list_followers_followees(ds, 'followee', handler, **args)
+    return list_followers_following(ds, 'followee', handler, **args)
 
 
 def listPosts(ds, **args):
@@ -135,7 +135,7 @@ def follow(ds, **args):
 
     db = ds.get_db()
     c = db.cursor()
-    c.execute("""SELECT * FROM followers
+    c.execute(u"""SELECT * FROM followers
                  WHERE follower = %s AND followee = %s""",
               params)
 
@@ -143,10 +143,10 @@ def follow(ds, **args):
     c.close()
 
     if in_base_follower:
-        query = """UPDATE followers SET unfollowed = 0
+        query = u"""UPDATE followers SET unfollowed = 0
                    WHERE follower = %s AND followee = %s"""
     else:
-        query = """INSERT INTO followers (follower, followee)
+        query = u"""INSERT INTO followers (follower, followee)
                    VALUES (%s, %s)"""
 
     c = db.cursor()
@@ -173,7 +173,7 @@ def unfollow(ds, **args):
     db = ds.get_db()
     c = db.cursor()
     try:
-        c.execute("""UPDATE followers SET unfollowed=1
+        c.execute(u"""UPDATE followers SET unfollowed=1
                      WHERE follower = %s AND followee = %s""",
                   params)
         db.commit()
@@ -194,7 +194,7 @@ def updateProfile(ds, **args):
     c = db.cursor()
 
     try:
-        c.execute("""UPDATE user
+        c.execute(u"""UPDATE user
                      SET about = %s,
                          name = %s
                      WHERE email = %s""",

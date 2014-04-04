@@ -19,7 +19,7 @@ def create(ds, **args):
     db = ds.get_db()
     c = db.cursor()
     try:
-        c.execute("""INSERT INTO thread (forum, forum_id, title, isClosed, user, user_id, date, message, slug, isDeleted)
+        c.execute(u"""INSERT INTO thread (forum, forum_id, title, isClosed, user, user_id, date, message, slug, isDeleted)
                      VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)""",
                   (args['forum'], forum_id, args['title'], int(args['isClosed']), args['user'],
                    user_id, args['date'], args['message'], args['slug'], int(args['isDeleted'])))
@@ -33,7 +33,21 @@ def create(ds, **args):
         ds.close_last()
 
     # TODO: get rid off details
-    return details(ds, thread=thread_id)
+    return {
+        'id': thread_id,
+        'date': args['date'],
+        'dislikes': 0,
+        'likes': 0,
+        'isClosed': args['isClosed'],
+        'isDeleted': args['isDeleted'],
+        'title': args['title'],
+        'slug': args['slug'],
+        'message': args['message'],
+        'user': args['user'],
+        'forum': args['forum'],
+        'posts': 0,
+        'points': 0
+    }
 
 
 def close(ds, **args):
@@ -43,7 +57,7 @@ def close(ds, **args):
     c = db.cursor()
 
     try:
-        c.execute("""UPDATE thread
+        c.execute(u"""UPDATE thread
                      SET isClosed = 1
                      WHERE id = %s""",
                   (args['thread'],))
@@ -64,13 +78,13 @@ def details(ds, **args):
 
     db = ds.get_db()
     c = db.cursor()
-    c.execute("""SELECT * FROM thread
+    c.execute(u"""SELECT * FROM thread
                WHERE id = %s""", (args['thread'],))
     thread_data = c.fetchone()
     c.close()
     ds.close_last()
 
-    check_empty(thread_data, "No thread found with that id")
+    check_empty(thread_data, u"No thread found with that id")
 
     make_boolean(['isClosed', 'isDeleted'], thread_data)
     thread_data['date'] = str(thread_data['date'])
@@ -95,27 +109,27 @@ def list(ds, orderby='date', **args):
     optional('related', args, [], ['user', 'forum'])
 
     query = StringBuilder()
-    query.append("""SELECT id FROM thread""")
+    query.append(u"""SELECT id FROM thread""")
     params = ()
 
     if 'user' in args:
-        query.append("""WHERE user = %s""")
+        query.append(u"""WHERE user = %s""")
         params += (args['user'],)
 
     elif 'forum' in args:
-        query.append("""WHERE forum = %s""")
+        query.append(u"""WHERE forum = %s""")
         params += (args['forum'],)
 
     if args['since']:
-        query.append("""WHERE date >= %s""")
+        query.append(u"""AND date >= %s""")
         params += (args['since'],)
 
     if args['order']:
-        query.append("""ORDER BY %s """ + args['order'])
+        query.append(u"""ORDER BY %s """ + args['order'])
         params += (orderby,)
 
     if args['limit']:
-        query.append("""LIMIT %d""" % int(args['limit']))
+        query.append(u"""LIMIT %d""" % int(args['limit']))
 
     db = ds.get_db()
     c = db.cursor()
@@ -141,7 +155,7 @@ def open(ds, **args):
     db = ds.get_db()
     c = db.cursor()
     try:
-        c.execute("""UPDATE thread
+        c.execute(u"""UPDATE thread
                      SET isClosed = 0
                      WHERE id = %s""",
                   (args['thread'],))
@@ -162,13 +176,9 @@ def remove(ds, **args):
     db = ds.get_db()
     c = db.cursor()
     try:
-        c.execute("""UPDATE thread
+        c.execute(u"""UPDATE thread
                      SET isDeleted = 1
                      WHERE id = %s""",
-                  (args['thread'],))
-        c.execute("""UPDATE post
-                     SET isDeleted = 1
-                     WHERE thread_id = %s""",
                   (args['thread'],))
         db.commit()
     except Exception as e:
@@ -187,16 +197,11 @@ def restore(ds, **args):
     db = ds.get_db()
     c = db.cursor()
     try:
-        c.execute("""UPDATE thread
+        c.execute(u"""UPDATE thread
                      SET isDeleted = 0
                      WHERE id = %s""",
                   (args['thread'],))
 
-        # TODO: posts can be deleted not only because of threads
-        c.execute("""UPDATE post
-                     SET isDeleted = 0
-                     WHERE thread_id = %s""",
-                  (args['thread'],))
         db.commit()
     except Exception as e:
         db.rollback()
@@ -216,17 +221,17 @@ def subscribe(ds, **args):
 
     db = ds.get_db()
     c = db.cursor()
-    c.execute("""SELECT * FROM subscriptions
+    c.execute(u"""SELECT * FROM subscriptions
                  WHERE user_id = %s AND thread_id = %s""",
               (user_id, thread_id))
     subscribed = c.fetchone()
     c.close()
 
     if subscribed:
-        query = """UPDATE subscriptions SET unsubscribed = 0
+        query = u"""UPDATE subscriptions SET unsubscribed = 0
                    WHERE user_id = %s AND thread_id = %s"""
     else:
-        query = """INSERT INTO subscriptions (user_id, thread_id)
+        query = u"""INSERT INTO subscriptions (user_id, thread_id)
                    VALUES (%s, %s)"""
 
     c = db.cursor()
@@ -255,7 +260,7 @@ def unsubscribe(ds, **args):
     db = ds.get_db()
     c = db.cursor()
     try:
-        c.execute("""UPDATE subscriptions SET unsubscribed = 1
+        c.execute(u"""UPDATE subscriptions SET unsubscribed = 1
                    WHERE user_id = %s AND thread_id = %s""",
                   (user_id, thread_id))
         db.commit()
@@ -278,7 +283,7 @@ def update(ds, **args):
     db = ds.get_db()
     c = db.cursor()
     try:
-        c.execute("""UPDATE thread
+        c.execute(u"""UPDATE thread
                      SET message = %s,
                          slug = %s
                      WHERE id = %s""",
@@ -302,19 +307,19 @@ def vote(ds, **args):
     c = db.cursor()
     try:
         if args['vote'] > 0:
-            c.execute("""UPDATE thread
+            c.execute(u"""UPDATE thread
                          SET likes = likes + 1
                          WHERE id = %s""",
                       (args['thread'],))
         elif args['vote'] < 0:
-            c.execute("""UPDATE thread
+            c.execute(u"""UPDATE thread
                          SET dislikes = dislikes + 1
                          WHERE id = %s""",
                       (args['thread'],))
         else:
-            raise Exception("Vote is not allowed to be 0")
+            raise Exception(u"Vote is not allowed to be 0")
 
-        c.execute("""UPDATE thread
+        c.execute(u"""UPDATE thread
                      SET points = likes - dislikes
                      WHERE id = %s""",
                   (args['thread'],))

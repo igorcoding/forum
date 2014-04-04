@@ -5,7 +5,7 @@ from forum import settings
 
 
 class DataService:
-    def __init__(self, config_file='api/db.ini'):
+    def __init__(self, config_file='../api/db.ini'):
         config = DataService.parse_config(config_file)
 
         self.host = config['host']
@@ -38,7 +38,8 @@ class DataService:
                              db=self.db_name,
                              user=self.username,
                              passwd=self.password,
-                             cursorclass=MySQLdb.cursors.SSDictCursor)
+                             cursorclass=MySQLdb.cursors.SSDictCursor,
+                             charset='utf8')
         self.opened_connections.append(db)
         return db
 

@@ -4,6 +4,10 @@ def execute(entity, action, data):
     from api.util.DataService import DataService
     from api.util.response_helpers import response_good, response_error
 
+    for key in data:
+        if type(data[key]) == str:
+            data[key] = data[key].replace("'", '"')
+
     entity = {
         "forum": forum,
         "user": user,
@@ -11,9 +15,9 @@ def execute(entity, action, data):
         "post": post
     }[entity]
 
-    print data
+    #print data
 
-    func = getattr(entity, action)
+    func = getattr(entity, action[:len(action)-1])
 
     ds = DataService()
     try:

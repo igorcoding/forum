@@ -106,7 +106,7 @@
       <index name="username_UNIQUE" unique="true" columns="username"/>
     </table>
   </data-source>
-  <data-source source="LOCAL" name="Django default" uuid="2c262c10-f537-46ff-85c5-98e22d001249">
+  <data-source source="LOCAL" name="Django default" uuid="a38fb4b8-b4c5-468e-a1f0-2c7972fa39a0">
     <database-info product="" version="" jdbc-version="" driver-name="" driver-version=""/>
   </data-source>
 </component>

@@ -1,3 +1,6 @@
+import json
+
+
 def required(param_list, args):
     for param in param_list:
         if type(param) != str:
@@ -23,6 +26,11 @@ def semi_required(param_variations, args):
 def optional(param, args, default=None, possible_values=None):
     if param not in args:
         args[param] = default
+
+    try:
+        args[param] = json.loads(args[param], encoding='utf-8')
+    except:
+        args[param] = args[param]
 
     def check_arg(arg, values):
         if arg not in values:

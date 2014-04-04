@@ -1,0 +1,7 @@
+147
+GET /igor/user/details?user=igor.com HTTP/1.1
+User-Agent: YandexTank/1.1.1
+Host: localhost
+Accept-Encoding: gzip, deflate
+Connection: Close
+

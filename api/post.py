@@ -8,7 +8,7 @@ from api.api_helpers.user_helper import get_id_by_email
 
 def create(ds, **args):
     required(['date', 'thread', 'message', 'user', 'forum'], args)
-    optional('parent', args, 0)
+    optional('parent', args, None)
     optional('isApproved', args, False)
     optional('isHighlighted', args, False)
     optional('isEdited', args, False)
@@ -20,13 +20,17 @@ def create(ds, **args):
     db = ds.get_db()
     c = db.cursor()
     try:
-        c.execute("""INSERT INTO post (date, thread_id, message, user, user_id, forum, parent,
+        c.execute(u"""INSERT INTO post (date, thread_id, message, user, user_id, forum, parent,
                                        isApproved, isHighlighted, isEdited, isSpam, isDeleted)
                      VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)""",
                   (args['date'], args['thread'], args['message'], args['user'], user_id,
-                   args['forum'], args['parent'], args['isApproved'], args['isHighlighted'],
-                   args['isEdited'], args['isSpam'], args['isDeleted']))
+                   args['forum'], args['parent'], int(args['isApproved']), int(args['isHighlighted']),
+                   int(args['isEdited']), int(args['isSpam']), int(args['isDeleted'])))
         post_id = c.lastrowid
+
+        c.execute(u"""UPDATE thread SET posts = posts + 1
+                     WHERE id = %s""", (args['thread'],))
+
         db.commit()
     except Exception as e:
         db.rollback()
@@ -44,13 +48,13 @@ def details(ds, **args):
 
     db = ds.get_db()
     c = db.cursor()
-    c.execute("""SELECT * FROM post
+    c.execute(u"""SELECT * FROM post
                WHERE id = %s""", (args['post'],))
     post_data = c.fetchone()
     c.close()
     ds.close_last()
 
-    check_empty(post_data, "No post found with that id")
+    check_empty(post_data, u"No post found with that id")
 
     post_data['date'] = str(post_data['date'])
     make_boolean(['isApproved', 'isDeleted', 'isEdited',
@@ -79,34 +83,34 @@ def list(ds, orderby='date', **args):
     optional('since', args)
     optional('limit', args)
     optional('order', args, 'desc', ['desc', 'asc'])
-    optional('related', args, [], ['user', 'forum'])
+    optional('related', args, [], ['user', 'forum', 'thread'])
 
     query = StringBuilder()
-    query.append("""SELECT id FROM post""")
+    query.append(u"""SELECT id FROM post""")
     params = ()
 
     if 'forum' in args:
-        query.append("""WHERE forum = %s""")
+        query.append(u"""WHERE forum = %s""")
         params += (args['forum'],)
 
     elif 'thread' in args:
-        query.append("""WHERE thread_id = %s""")
+        query.append(u"""WHERE thread_id = %s""")
         params += (args['thread'],)
 
     elif 'user' in args:
-        query.append("""WHERE user = %s""")
+        query.append(u"""WHERE user = %s""")
         params += (args['user'],)
 
     if args['since']:
-        query.append("""WHERE date >= %s""")
+        query.append(u"""AND date >= %s""")
         params += (args['since'],)
 
     if args['order']:
-        query.append("""ORDER BY %s """ + args['order'])
+        query.append(u"""ORDER BY %s """ + args['order'])
         params += (orderby,)
 
     if args['limit']:
-        query.append("""LIMIT %d""" % int(args['limit']))
+        query.append(u"""LIMIT %d""" % int(args['limit']))
 
     db = ds.get_db()
     c = db.cursor()
@@ -128,7 +132,7 @@ def remove(ds, **args):
     db = ds.get_db()
     c = db.cursor()
     try:
-        c.execute("""UPDATE post
+        c.execute(u"""UPDATE post
                      SET isDeleted = 1
                      WHERE id = %s""",
                   (args['post'],))
@@ -149,7 +153,7 @@ def restore(ds, **args):
     db = ds.get_db()
     c = db.cursor()
     try:
-        c.execute("""UPDATE post
+        c.execute(u"""UPDATE post
                      SET isDeleted = 0
                      WHERE id = %s""",
                   (args['post'],))
@@ -170,7 +174,7 @@ def update(ds, **args):
     db = ds.get_db()
     c = db.cursor()
     try:
-        c.execute("""UPDATE post
+        c.execute(u"""UPDATE post
                      SET message = %s
                      WHERE id = %s""",
                   (args['message'], args['post']))
@@ -193,19 +197,19 @@ def vote(ds, **args):
     c = db.cursor()
     try:
         if args['vote'] > 0:
-            c.execute("""UPDATE post
+            c.execute(u"""UPDATE post
                          SET likes = likes + 1
                          WHERE id = %s""",
                       (args['post'],))
         elif args['vote'] < 0:
-            c.execute("""UPDATE post
+            c.execute(u"""UPDATE post
                          SET dislikes = dislikes + 1
                          WHERE id = %s""",
                       (args['post'],))
         else:
-            raise Exception("Vote is not allowed to be 0")
+            raise Exception(u"Vote is not allowed to be 0")
 
-        c.execute("""UPDATE post
+        c.execute(u"""UPDATE post
                      SET points = likes - dislikes
                      WHERE id = %s""",
                   (args['post'],))

@@ -14,11 +14,9 @@ def create(ds, **args):
     db = ds.get_db()
     c = db.cursor()
     try:
-        c.execute("""INSERT INTO forum (name, short_name, user, user_id)
+        c.execute(u"""INSERT INTO forum (name, short_name, user, user_id)
                      VALUES (%s, %s, %s, %s)""",
                   (args['name'], args['short_name'], args['user'], user_id))
-
-        c.execute("""UPDATE thread SET posts = posts + 1""")
         db.commit()
     except Exception as e:
         db.rollback()
@@ -36,17 +34,17 @@ def details(ds, **args):
 
     db = ds.get_db()
     c = db.cursor()
-    c.execute("""SELECT * FROM forum
+    c.execute(u"""SELECT * FROM forum
                WHERE forum.short_name = %s""", (args['forum'],))
     forum_data = c.fetchone()
     c.close()
     ds.close_last()
 
-    check_empty(forum_data, "No forum found with that short_name")
+    check_empty(forum_data, u"No forum found with that short_name")
 
     email = forum_data['user']
     if 'user' in args['related']:
-        user_data = user.details(db, user=email)
+        user_data = user.details(ds, user=email)
     else:
         user_data = email
 
@@ -71,19 +69,19 @@ def listUsers(ds, **args):
     optional('order', args, 'desc', ['desc', 'asc'])
 
     query = StringBuilder()
-    query.append("""SELECT user FROM post
+    query.append(u"""SELECT DISTINCT user FROM post
                     WHERE forum = %s""")
     params = (args['forum'],)
 
-    if args['since']:
-        query.append("""WHERE date >= %s""")
-        params += (args['since'],)
+    if args['since_id']:
+        query.append(u"""WHERE id >= %s""")
+        params += (args['since_id'],)
 
     if args['order']:
-        query.append("""ORDER BY date %s""" % args['order'])
+        query.append(u"""ORDER BY id %s""" % args['order'])
 
     if args['limit']:
-        query.append("""LIMIT %d""" % int(args['limit']))
+        query.append(u"""LIMIT %d""" % int(args['limit']))
 
     db = ds.get_db()
     c = db.cursor()
