@@ -23,10 +23,10 @@ def create(ds, **args):
         c.execute(u"""INSERT INTO post (date, thread_id, message, user, user_id, forum, parent,
                                        isApproved, isHighlighted, isEdited, isSpam, isDeleted)
                      VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)""",
-                  (args['date'], args['thread'], args['message'], args['user'], user_id,
-                   args['forum'], args['parent'], int(args['isApproved']), int(args['isHighlighted']),
-                   int(args['isEdited']), int(args['isSpam']), int(args['isDeleted'])))
-        post_id = c.lastrowid
+                  (args['date'], args['thread'], args['message'], args['user'], user_id, args['forum'], args['parent'],
+                   int(args['isApproved']), int(args['isHighlighted']), int(args['isEdited']), int(args['isSpam']), int(args['isDeleted'])))
+
+        post_id = db.insert_id()
 
         c.execute(u"""UPDATE thread SET posts = posts + 1
                      WHERE id = %s""", (args['thread'],))
@@ -106,8 +106,7 @@ def list(ds, orderby='date', **args):
         params += (args['since'],)
 
     if args['order']:
-        query.append(u"""ORDER BY %s """ + args['order'])
-        params += (orderby,)
+        query.append(u"""ORDER BY date %s""" % args['order'])
 
     if args['limit']:
         query.append(u"""LIMIT %d""" % int(args['limit']))
@@ -116,9 +115,7 @@ def list(ds, orderby='date', **args):
     c = db.cursor()
     c.execute(str(query), params)
 
-    posts = []
-    for row in c:
-        posts.append(details(ds, post=row['id'], related=args['related']))
+    posts = [details(ds, post=row['id'], related=args['related']) for row in c]
 
     c.close()
     ds.close_last()

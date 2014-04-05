@@ -1,4 +1,12 @@
+#!/usr/bin/python
+import os
 import sys
+
+root_dir = os.path.join('/', 'home', 'igor', 'Documents', 'projects', 'python', 'forum')
+os.chdir(root_dir)
+sys.path.append(root_dir)
+
+
 import functools
 import json
 import logging
@@ -9,7 +17,6 @@ import tornado.gen
 import tornado.ioloop
 from tornado.options import define, options
 
-sys.path.append('../')
 from api import api_executor
 from api.util.response_helpers import *
 

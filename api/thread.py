@@ -23,7 +23,7 @@ def create(ds, **args):
                      VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)""",
                   (args['forum'], forum_id, args['title'], int(args['isClosed']), args['user'],
                    user_id, args['date'], args['message'], args['slug'], int(args['isDeleted'])))
-        thread_id = c.lastrowid
+        thread_id = db.insert_id()
         db.commit()
     except Exception as e:
         db.rollback()
@@ -125,8 +125,7 @@ def list(ds, orderby='date', **args):
         params += (args['since'],)
 
     if args['order']:
-        query.append(u"""ORDER BY %s """ + args['order'])
-        params += (orderby,)
+        query.append(u"""ORDER BY date %s""" % args['order'])
 
     if args['limit']:
         query.append(u"""LIMIT %d""" % int(args['limit']))
@@ -135,9 +134,7 @@ def list(ds, orderby='date', **args):
     c = db.cursor()
     c.execute(str(query), params)
 
-    threads = []
-    for row in c:
-        threads.append(details(ds, thread=row['id'], related=args['related']))
+    threads = [details(ds, thread=row['id'], related=args['related']) for row in c]
 
     c.close()
     ds.close_last()

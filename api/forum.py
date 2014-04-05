@@ -74,7 +74,7 @@ def listUsers(ds, **args):
     params = (args['forum'],)
 
     if args['since_id']:
-        query.append(u"""WHERE id >= %s""")
+        query.append(u"""AND id >= %s""")
         params += (args['since_id'],)
 
     if args['order']:
@@ -87,7 +87,7 @@ def listUsers(ds, **args):
     c = db.cursor()
     c.execute(str(query), params)
 
-    users_list = [details(ds, user=u['user']) for u in c]
+    users_list = [user.details(ds, user=u['user']) for u in c]
 
     c.close()
     ds.close_last()

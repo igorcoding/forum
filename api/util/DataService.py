@@ -1,11 +1,9 @@
 import MySQLdb
 import MySQLdb.cursors
 
-from forum import settings
-
 
 class DataService:
-    def __init__(self, config_file='../api/db.ini'):
+    def __init__(self, config_file='api/db.ini'):
         config = DataService.parse_config(config_file)
 
         self.host = config['host']
