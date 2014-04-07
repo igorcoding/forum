@@ -12,6 +12,7 @@ followers = []
 subscriptions = []
 
 url_prefix = "http://localhost/igor/"
+echo = False
 
 
 def check_in_arr(array, obj_key, value):
@@ -161,37 +162,43 @@ def generate_subscriptions(count):
 def send_users():
     for user in users:
         r = requests.post(url_prefix + 'user/create/', data=json.dumps(user))
-        print r.text
+        if echo:
+            print r.text
 
 
 def send_forums():
     for forum in forums:
         r = requests.post(url_prefix + 'forum/create/', data=json.dumps(forum))
-        print r.text
+        if echo:
+            print r.text
 
 
 def send_threads():
     for thread in threads:
         r = requests.post(url_prefix + 'thread/create/', data=json.dumps(thread))
-        print r.text
+        if echo:
+            print r.text
 
 
 def send_posts():
     for post in posts:
         r = requests.post(url_prefix + 'post/create/', data=json.dumps(post))
-        print r.text
+        if echo:
+            print r.text
 
 
 def send_followers():
     for f in followers:
         r = requests.post(url_prefix + 'user/follow/', data=json.dumps(f))
-        print r.text
+        if echo:
+            print r.text
 
 
 def send_subscriptions():
     for s in subscriptions:
         r = requests.post(url_prefix + 'thread/subscribe/', data=json.dumps(s))
-        print r.text
+        if echo:
+            print r.text
 
 
 def main():
