@@ -70,7 +70,7 @@ def listUsers(ds, **args):
 
     query = StringBuilder()
     query.append(u"""SELECT DISTINCT user FROM post
-                    WHERE forum = %s""")
+                     WHERE forum = %s""")
     params = (args['forum'],)
 
     if args['since_id']:
@@ -78,7 +78,7 @@ def listUsers(ds, **args):
         params += (args['since_id'],)
 
     if args['order']:
-        query.append(u"""ORDER BY id %s""" % args['order'])
+        query.append(u"""ORDER BY user_id %s""" % args['order'])
 
     if args['limit']:
         query.append(u"""LIMIT %d""" % int(args['limit']))
