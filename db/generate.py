@@ -116,9 +116,10 @@ def generate_threads(count):
 
 
 def generate_posts(count):
-    rand_thread = random.choice(threads)
-
+    
     for i in range(0, count):
+        rand_thread = random.choice(threads)
+
         post = {
             'forum': rand_thread['forum'],
             'thread': rand_thread['id'],
