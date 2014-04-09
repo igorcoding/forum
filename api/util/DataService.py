@@ -30,6 +30,25 @@ class DataService:
                 res[option] = None
         return res
 
+    def truncate(self):
+        clears = [
+            "set FOREIGN_KEY_CHECKS=0",
+            "TRUNCATE TABLE subscriptions",
+            "TRUNCATE TABLE followers",
+            "TRUNCATE TABLE post",
+            "TRUNCATE TABLE thread",
+            "TRUNCATE TABLE forum",
+            "TRUNCATE TABLE user",
+            "set FOREIGN_KEY_CHECKS=1"
+        ]
+        db = self.get_db()
+        c = db.cursor()
+        for statement in clears:
+            c.execute(statement)
+        c.close()
+
+        self.close_last()
+
     def connect(self):
         db = MySQLdb.connect(host=self.host,
                              port=self.port,

@@ -1,3 +1,5 @@
+from api.util.DataService import DataService
+
 
 def execute(entity, action, data):
     from api import forum, thread, user, post
@@ -28,3 +30,13 @@ def execute(entity, action, data):
     ds.close_all()
 
     return response
+
+
+def clear_db():
+    ds = DataService()
+    try:
+        ds.truncate()
+        res = "Cleared"
+    except Exception as e:
+        res = "Error"
+    return res

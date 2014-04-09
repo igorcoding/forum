@@ -69,19 +69,12 @@ class Handler(ThreadMixin):
     def _worker(self):
         self.res = api_executor.execute(self.entity, self.action, self.data)
 
-    @async_task
-    def retriever(self, entity, action, data, callback):
-        res = api_executor.execute(entity, action, data)
-        callback(res)
-
     @tornado.web.asynchronous
     def get(self, entity, action):
         self.entity = entity
         self.action = action
         self.data = parse_get(self.request.arguments)
         self.start_worker()
-        #response = yield tornado.gen.Task(self.retriever, entity, action, data)
-        #self.finish(response)
 
     @tornado.web.asynchronous
     def post(self, entity, action):
@@ -89,8 +82,21 @@ class Handler(ThreadMixin):
         self.action = action
         self.data = json.loads(self.request.body, encoding='utf-8')
         self.start_worker()
-        #response = yield tornado.gen.Task(self.retriever, entity, action, data)
-        #self.finish(response)
+
+
+class ClearHandler(ThreadMixin):
+    res = None
+
+    def _worker(self):
+        self.res = api_executor.clear_db()
+
+    @tornado.web.asynchronous
+    def get(self):
+        self.send_error(405)
+
+    @tornado.web.asynchronous
+    def post(self):
+        self.start_worker()
 
 
 define('port', type=int, default=9001)
@@ -101,6 +107,7 @@ def main():
 
     application = tornado.web.Application([
         (r"/(\S+)/(\S+)", Handler),
+        (r"/clear/", ClearHandler),
     ])
 
     logging.info("Server started on port %s", options.port)
