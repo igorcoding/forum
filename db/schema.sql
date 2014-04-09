@@ -72,7 +72,6 @@ CREATE TABLE IF NOT EXISTS `forum_db`.`thread` (
   `forum_id` BIGINT UNSIGNED NOT NULL,
   `user_id` BIGINT UNSIGNED NOT NULL,
   PRIMARY KEY (`id`, `forum_id`, `user_id`),
-  UNIQUE INDEX `slug_UNIQUE` (`slug` ASC),
   INDEX `fk_thread_forum1_idx` (`forum_id` ASC),
   INDEX `fk_thread_user1_idx` (`user_id` ASC),
   INDEX `user_INDEX` (`user` ASC),
