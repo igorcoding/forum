@@ -2,7 +2,8 @@
 import os
 import sys
 
-root_dir = os.path.join('/', 'home', 'igor', 'Projects', 'python', 'forum')
+root_dir = os.path.join('/', 'root', 'projects', 'forum')
+
 os.chdir(root_dir)
 sys.path.append(root_dir)
 
