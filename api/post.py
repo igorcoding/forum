@@ -39,7 +39,23 @@ def create(ds, **args):
         c.close()
         ds.close_last()
 
-    return details(ds, post=post_id)
+    data = {
+        'date': args['date'],
+        'forum': args['forum'],
+        'id': post_id,
+        'isApproved': args['isApproved'],
+        'isDeleted': args['isDeleted'],
+        'isEdited': args['isEdited'],
+        'isHighlighted': args['isHighlighted'],
+        'isSpam': args['isSpam'],
+        'message': args['message'],
+        'thread': args['thread'],
+        'user': args['user']
+    }
+
+    return data
+
+    # return details(ds, post=post_id)
 
 
 def details(ds, **args):

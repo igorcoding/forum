@@ -17,6 +17,8 @@ def create(ds, **args):
         c.execute(u"""INSERT INTO forum (name, short_name, user, user_id)
                      VALUES (%s, %s, %s, %s)""",
                   (args['name'], args['short_name'], args['user'], user_id))
+        _id = db.insert_id()
+
         db.commit()
     except Exception as e:
         db.rollback()
@@ -25,7 +27,16 @@ def create(ds, **args):
         c.close()
         ds.close_last()
 
-    return details(ds, forum=args['short_name'])
+    data = {
+        'id': _id,
+        'name': args['name'],
+        'short_name': args['short_name'],
+        'user': args['user']
+    }
+
+    return data
+
+    # return details(ds, forum=args['short_name'])
 
 
 def details(ds, **args):

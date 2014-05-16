@@ -11,7 +11,7 @@ posts = []
 followers = []
 subscriptions = []
 
-url_prefix = "http://localhost/igor/"
+url_prefix = "http://localhost/db/api/"
 echo = False
 
 
@@ -207,7 +207,7 @@ def main():
     forums_count = 30
     threads_count = 80
     posts_count = 200
-    followers_count = 7
+    followers_count = 300
     subscriptions_count = 300
 
     generate_users(users_count)
