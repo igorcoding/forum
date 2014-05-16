@@ -16,6 +16,8 @@ def create(ds, **args):
                      VALUES (%s, %s, %s, %s, %s, %s)""",
                   (args['username'], args['name'], args['email'],
                    args['about'], int(args['isAnonymous']), '123456'))
+        _id = db.insert_id()
+
         db.commit()
     except Exception as e:
         db.rollback()
@@ -24,15 +26,24 @@ def create(ds, **args):
         c.close()
         ds.close_last()
 
-    db = ds.get_db()
-    c = db.cursor()
-    c.execute(u"""SELECT * FROM user
-               WHERE email = %s""", (args['email'],))
-    user_data = c.fetchone()
-    c.close()
-    ds.close_last()
+    user_data = {
+        'about': args['about'],
+        'email': args['email'],
+        'id': _id,
+        'isAnonymous': False,
+        'name': args['name'],
+        'username': args['username']
+    }
 
-    del user_data['password']
+    # db = ds.get_db()
+    # c = db.cursor()
+    # c.execute(u"""SELECT * FROM user
+    #            WHERE email = %s""", (args['email'],))
+    # user_data = c.fetchone()
+    # c.close()
+    # ds.close_last()
+
+    # del user_data['password']
 
     return user_data
 
