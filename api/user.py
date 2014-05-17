@@ -60,7 +60,7 @@ def details(ds, **args):
     c = db.cursor()
 
     c.execute(u"""SELECT thread_id FROM subscriptions
-                 WHERE user_id = %s AND unsubscribed = 0""", (user_data['id'],))
+                 WHERE user = %s AND unsubscribed = 0""", (user_data['email'],))
     user_data['subscriptions'] = [s['thread_id'] for s in c]
 
     c.close()

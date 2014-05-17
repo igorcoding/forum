@@ -56,14 +56,14 @@
       <index name="user_INDEX" unique="false" columns="user"/>
     </table>
     <table name="subscriptions" schema="" catalog="forum_db" type="TABLE">
-      <column name="user_id" sqlType="BIGINT UNSIGNED" length="20" precision="0" nullable="false" jdbcType="-5"/>
+      <column name="user" sqlType="VARCHAR" length="255" precision="0" nullable="false" jdbcType="12"/>
       <column name="thread_id" sqlType="BIGINT UNSIGNED" length="20" precision="0" nullable="false" jdbcType="-5"/>
       <column name="unsubscribed" sqlType="TINYINT" length="3" precision="0" nullable="false" jdbcType="-6"/>
-      <primary-key name="PRIMARY" columns="user_id,thread_id"/>
-      <foreign-key name="fk_userId_to_user_id" columns="user_id" ref-table="user" ref-schema="" ref-catalog="forum_db" ref-columns="id" update-rule="3" delete-rule="3" deferrability="2"/>
+      <primary-key name="PRIMARY" columns="thread_id"/>
       <foreign-key name="fk_threadId_to_thread_id" columns="thread_id" ref-table="thread" ref-schema="" ref-catalog="forum_db" ref-columns="id" update-rule="3" delete-rule="3" deferrability="2"/>
+      <foreign-key name="fk_subscriptions_user1" columns="user" ref-table="user" ref-schema="" ref-catalog="forum_db" ref-columns="email" update-rule="3" delete-rule="3" deferrability="2"/>
+      <index name="fk_subscriptions_user1_idx" unique="false" columns="user"/>
       <index name="fk_user_subscribed_thread1_idx" unique="false" columns="thread_id"/>
-      <index name="fk_userId_to_user_id_idx" unique="false" columns="user_id"/>
     </table>
     <table name="thread" schema="" catalog="forum_db" type="TABLE">
       <column name="id" sqlType="BIGINT UNSIGNED" length="20" precision="0" nullable="false" jdbcType="-5" autoIncrement="true"/>
@@ -100,7 +100,7 @@
       <exported-key name="fk_user_has_user_user1" table="followers" schema="" catalog="forum_db" columns="followee"/>
       <exported-key name="fk_forum_user1" table="forum" schema="" catalog="forum_db" columns="user"/>
       <exported-key name="fk_post_user1" table="post" schema="" catalog="forum_db" columns="user"/>
-      <exported-key name="fk_userId_to_user_id" table="subscriptions" schema="" catalog="forum_db" columns="user_id"/>
+      <exported-key name="fk_subscriptions_user1" table="subscriptions" schema="" catalog="forum_db" columns="user"/>
       <exported-key name="fk_thread_user1" table="thread" schema="" catalog="forum_db" columns="user"/>
       <index name="email_UNIQUE" unique="true" columns="email"/>
       <index name="username_UNIQUE" unique="true" columns="username"/>

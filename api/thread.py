@@ -211,27 +211,27 @@ def restore(ds, **args):
 def subscribe(ds, **args):
     required(['user', 'thread'], args)
 
-    user_id = get_id_by_email(ds, args['user'])
+    # user_id = get_id_by_email(ds, args['user'])
     thread_id = args['thread']
 
     db = ds.get_db()
     c = db.cursor()
     c.execute(u"""SELECT * FROM subscriptions
-                 WHERE user_id = %s AND thread_id = %s""",
-              (user_id, thread_id))
+                 WHERE user = %s AND thread_id = %s""",
+              (args['user'], thread_id))
     subscribed = c.fetchone()
     c.close()
 
     if subscribed:
         query = u"""UPDATE subscriptions SET unsubscribed = 0
-                   WHERE user_id = %s AND thread_id = %s"""
+                   WHERE user = %s AND thread_id = %s"""
     else:
-        query = u"""INSERT INTO subscriptions (user_id, thread_id)
+        query = u"""INSERT INTO subscriptions (user, thread_id)
                    VALUES (%s, %s)"""
 
     c = db.cursor()
     try:
-        c.execute(query, (user_id, thread_id))
+        c.execute(query, (args['user'], thread_id))
         db.commit()
     except Exception as e:
         db.rollback()
@@ -249,15 +249,15 @@ def subscribe(ds, **args):
 def unsubscribe(ds, **args):
     required(['user', 'thread'], args)
 
-    user_id = get_id_by_email(ds, args['user'])
+    # user_id = get_id_by_email(ds, args['user'])
     thread_id = args['thread']
 
     db = ds.get_db()
     c = db.cursor()
     try:
         c.execute(u"""UPDATE subscriptions SET unsubscribed = 1
-                   WHERE user_id = %s AND thread_id = %s""",
-                  (user_id, thread_id))
+                   WHERE user = %s AND thread_id = %s""",
+                  (args['user'], thread_id))
         db.commit()
     except Exception as e:
         db.rollback()
