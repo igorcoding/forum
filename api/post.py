@@ -15,15 +15,15 @@ def create(ds, **args):
     optional('isSpam', args, False)
     optional('isDeleted', args, False)
 
-    user_id = get_id_by_email(ds, args['user'])
+    # user_id = get_id_by_email(ds, args['user'])
 
     db = ds.get_db()
     c = db.cursor()
     try:
-        c.execute(u"""INSERT INTO post (date, thread_id, message, user, user_id, forum, parent,
+        c.execute(u"""INSERT INTO post (date, thread_id, message, user, forum, parent,
                                        isApproved, isHighlighted, isEdited, isSpam, isDeleted)
-                     VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)""",
-                  (args['date'], args['thread'], args['message'], args['user'], user_id, args['forum'], args['parent'],
+                     VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)""",
+                  (args['date'], args['thread'], args['message'], args['user'], args['forum'], args['parent'],
                    int(args['isApproved']), int(args['isHighlighted']), int(args['isEdited']), int(args['isSpam']), int(args['isDeleted'])))
 
         post_id = db.insert_id()
@@ -55,8 +55,6 @@ def create(ds, **args):
 
     return data
 
-    # return details(ds, post=post_id)
-
 
 def details(ds, **args):
     required(['post'], args)
@@ -77,7 +75,7 @@ def details(ds, **args):
                   'isHighlighted', 'isSpam'], post_data)
 
     thread_id = post_data['thread_id']
-    del post_data['user_id']
+    # del post_data['user_id']
     del post_data['thread_id']
 
     if 'user' in args['related']:

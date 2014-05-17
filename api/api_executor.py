@@ -1,3 +1,4 @@
+import timeit
 from api.util.DataService import DataService
 
 
@@ -23,9 +24,14 @@ def execute(entity, action, data):
 
     ds = DataService()
     try:
+        start = timeit.timeit()
         result = func(ds, **data)
+        end = timeit.timeit()
+        print "Elapsed time: " + str(end - start)
+
         response = response_good(result)
     except Exception as e:
+        print str(e)
         response = response_error(str(e))
     ds.close_all()
 

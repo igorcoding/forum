@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <component name="dataSourceStorage">
   <data-source source="LOCAL" name="forum_db" uuid="c3def699-6238-4976-bf21-627e69bc61a1">
-    <database-info product="MySQL" version="5.5.35-0ubuntu0.13.10.2" jdbc-version="4.0" driver-name="MySQL Connector Java" driver-version="mysql-connector-java-5.1.26 ( Revision: ${bzr.revision-id} )">
+    <database-info product="MySQL" version="5.5.37-0ubuntu0.14.04.1" jdbc-version="4.0" driver-name="MySQL Connector Java" driver-version="mysql-connector-java-5.1.28 ( Revision: ${bzr.revision-id} )">
       <extra-name-characters>#@</extra-name-characters>
       <identifier-quote-string>`</identifier-quote-string>
     </database-info>
@@ -15,93 +15,93 @@
       <foreign-key name="fk_user_has_user_user" columns="follower" ref-table="user" ref-schema="" ref-catalog="forum_db" ref-columns="id" update-rule="3" delete-rule="3" deferrability="2"/>
       <foreign-key name="fk_user_has_user_user1" columns="followee" ref-table="user" ref-schema="" ref-catalog="forum_db" ref-columns="id" update-rule="3" delete-rule="3" deferrability="2"/>
       <index name="fk_user_has_user_user1_idx" unique="false" columns="followee"/>
-      <index name="fk_user_has_user_user_idx" unique="false" columns="follower"/>
     </table>
     <table name="forum" schema="" catalog="forum_db" type="TABLE">
       <column name="id" sqlType="BIGINT UNSIGNED" length="20" precision="0" nullable="false" jdbcType="-5" autoIncrement="true"/>
       <column name="name" sqlType="VARCHAR" length="255" precision="0" nullable="false" jdbcType="12"/>
       <column name="short_name" sqlType="VARCHAR" length="255" precision="0" nullable="false" jdbcType="12"/>
       <column name="user" sqlType="VARCHAR" length="255" precision="0" nullable="false" jdbcType="12"/>
-      <column name="user_id" sqlType="BIGINT UNSIGNED" length="20" precision="0" nullable="false" jdbcType="-5"/>
-      <primary-key name="PRIMARY" columns="id,user_id"/>
-      <foreign-key name="fk_forum_user1" columns="user_id" ref-table="user" ref-schema="" ref-catalog="forum_db" ref-columns="id" update-rule="3" delete-rule="3" deferrability="2"/>
-      <exported-key name="fk_thread_forum1" table="thread" schema="" catalog="forum_db" columns="forum_id"/>
+      <primary-key name="PRIMARY" columns="id"/>
+      <foreign-key name="fk_forum_user1" columns="user" ref-table="user" ref-schema="" ref-catalog="forum_db" ref-columns="email" update-rule="3" delete-rule="3" deferrability="2"/>
+      <exported-key name="fk_post_forum1" table="post" schema="" catalog="forum_db" columns="forum"/>
+      <exported-key name="fk_thread_forum1" table="thread" schema="" catalog="forum_db" columns="forum"/>
       <index name="short_name_UNIQUE" unique="true" columns="short_name"/>
-      <index name="fk_forum_user1_idx" unique="false" columns="user_id"/>
+      <index name="fk_forum_user1_idx" unique="false" columns="user"/>
     </table>
     <table name="post" schema="" catalog="forum_db" type="TABLE">
       <column name="id" sqlType="BIGINT UNSIGNED" length="20" precision="0" nullable="false" jdbcType="-5" autoIncrement="true"/>
       <column name="date" sqlType="DATETIME" length="19" precision="0" nullable="false" jdbcType="93"/>
-      <column name="dislikes" sqlType="INT UNSIGNED" length="10" precision="0" nullable="false" jdbcType="4" def="MA=="/>
-      <column name="likes" sqlType="INT UNSIGNED" length="10" precision="0" nullable="false" jdbcType="4" def="MA=="/>
-      <column name="isApproved" sqlType="TINYINT UNSIGNED" length="3" precision="0" nullable="false" jdbcType="-6"/>
-      <column name="isDeleted" sqlType="TINYINT UNSIGNED" length="3" precision="0" nullable="false" jdbcType="-6"/>
-      <column name="isEdited" sqlType="TINYINT UNSIGNED" length="3" precision="0" nullable="false" jdbcType="-6"/>
-      <column name="isHighlighted" sqlType="TINYINT UNSIGNED" length="3" precision="0" nullable="false" jdbcType="-6"/>
-      <column name="isSpam" sqlType="TINYINT UNSIGNED" length="3" precision="0" nullable="false" jdbcType="-6"/>
+      <column name="dislikes" sqlType="INT" length="10" precision="0" nullable="false" jdbcType="4" def="MA=="/>
+      <column name="likes" sqlType="INT" length="10" precision="0" nullable="false" jdbcType="4" def="MA=="/>
+      <column name="isApproved" sqlType="TINYINT UNSIGNED" length="3" precision="0" nullable="false" jdbcType="-6" def="MA=="/>
+      <column name="isDeleted" sqlType="TINYINT UNSIGNED" length="3" precision="0" nullable="false" jdbcType="-6" def="MA=="/>
+      <column name="isEdited" sqlType="TINYINT UNSIGNED" length="3" precision="0" nullable="false" jdbcType="-6" def="MA=="/>
+      <column name="isHighlighted" sqlType="TINYINT UNSIGNED" length="3" precision="0" nullable="false" jdbcType="-6" def="MA=="/>
+      <column name="isSpam" sqlType="TINYINT UNSIGNED" length="3" precision="0" nullable="false" jdbcType="-6" def="MA=="/>
       <column name="message" sqlType="MEDIUMTEXT" length="16777215" precision="0" nullable="false" jdbcType="-1"/>
-      <column name="parent" sqlType="BIGINT" length="19" precision="0" nullable="false" jdbcType="-5" def="MA=="/>
+      <column name="parent" sqlType="BIGINT UNSIGNED" length="20" precision="0" nullable="true" jdbcType="-5"/>
       <column name="points" sqlType="INT" length="10" precision="0" nullable="false" jdbcType="4" def="MA=="/>
       <column name="forum" sqlType="VARCHAR" length="255" precision="0" nullable="false" jdbcType="12"/>
       <column name="user" sqlType="VARCHAR" length="255" precision="0" nullable="false" jdbcType="12"/>
-      <column name="user_id" sqlType="BIGINT UNSIGNED" length="20" precision="0" nullable="false" jdbcType="-5"/>
       <column name="thread_id" sqlType="BIGINT UNSIGNED" length="20" precision="0" nullable="false" jdbcType="-5"/>
-      <primary-key name="PRIMARY" columns="id,user_id,thread_id"/>
+      <primary-key name="PRIMARY" columns="id,thread_id"/>
+      <foreign-key name="fk_post_user1" columns="user" ref-table="user" ref-schema="" ref-catalog="forum_db" ref-columns="email" update-rule="3" delete-rule="3" deferrability="2"/>
       <foreign-key name="fk_post_thread1" columns="thread_id" ref-table="thread" ref-schema="" ref-catalog="forum_db" ref-columns="id" update-rule="3" delete-rule="3" deferrability="2"/>
-      <foreign-key name="fk_post_user1" columns="user_id" ref-table="user" ref-schema="" ref-catalog="forum_db" ref-columns="id" update-rule="3" delete-rule="3" deferrability="2"/>
+      <foreign-key name="fk_post_parent_1" columns="parent" ref-table="post" ref-schema="" ref-catalog="forum_db" ref-columns="id" update-rule="3" delete-rule="3" deferrability="2"/>
+      <foreign-key name="fk_post_forum1" columns="forum" ref-table="forum" ref-schema="" ref-catalog="forum_db" ref-columns="short_name" update-rule="3" delete-rule="3" deferrability="2"/>
+      <exported-key name="fk_post_parent_1" table="post" schema="" catalog="forum_db" columns="parent"/>
+      <index name="fk_post_parent_1_idx" unique="false" columns="parent"/>
       <index name="fk_post_thread1_idx" unique="false" columns="thread_id"/>
-      <index name="fk_post_user1_idx" unique="false" columns="user_id"/>
+      <index name="forum_INDEX" unique="false" columns="forum"/>
+      <index name="user_INDEX" unique="false" columns="user"/>
     </table>
     <table name="subscriptions" schema="" catalog="forum_db" type="TABLE">
       <column name="user_id" sqlType="BIGINT UNSIGNED" length="20" precision="0" nullable="false" jdbcType="-5"/>
       <column name="thread_id" sqlType="BIGINT UNSIGNED" length="20" precision="0" nullable="false" jdbcType="-5"/>
       <column name="unsubscribed" sqlType="TINYINT" length="3" precision="0" nullable="false" jdbcType="-6"/>
       <primary-key name="PRIMARY" columns="user_id,thread_id"/>
-      <foreign-key name="fk_threadId_to_thread_id" columns="thread_id" ref-table="thread" ref-schema="" ref-catalog="forum_db" ref-columns="id" update-rule="3" delete-rule="3" deferrability="2"/>
       <foreign-key name="fk_userId_to_user_id" columns="user_id" ref-table="user" ref-schema="" ref-catalog="forum_db" ref-columns="id" update-rule="3" delete-rule="3" deferrability="2"/>
+      <foreign-key name="fk_threadId_to_thread_id" columns="thread_id" ref-table="thread" ref-schema="" ref-catalog="forum_db" ref-columns="id" update-rule="3" delete-rule="3" deferrability="2"/>
       <index name="fk_user_subscribed_thread1_idx" unique="false" columns="thread_id"/>
       <index name="fk_userId_to_user_id_idx" unique="false" columns="user_id"/>
     </table>
     <table name="thread" schema="" catalog="forum_db" type="TABLE">
       <column name="id" sqlType="BIGINT UNSIGNED" length="20" precision="0" nullable="false" jdbcType="-5" autoIncrement="true"/>
       <column name="date" sqlType="DATETIME" length="19" precision="0" nullable="false" jdbcType="93"/>
-      <column name="dislikes" sqlType="INT UNSIGNED" length="10" precision="0" nullable="false" jdbcType="4" def="MA=="/>
-      <column name="likes" sqlType="INT UNSIGNED" length="10" precision="0" nullable="false" jdbcType="4" def="MA=="/>
-      <column name="isClosed" sqlType="TINYINT UNSIGNED" length="3" precision="0" nullable="false" jdbcType="-6"/>
-      <column name="isDeleted" sqlType="TINYINT UNSIGNED" length="3" precision="0" nullable="false" jdbcType="-6"/>
+      <column name="isClosed" sqlType="TINYINT UNSIGNED" length="3" precision="0" nullable="false" jdbcType="-6" def="MA=="/>
+      <column name="isDeleted" sqlType="TINYINT UNSIGNED" length="3" precision="0" nullable="false" jdbcType="-6" def="MA=="/>
       <column name="title" sqlType="VARCHAR" length="255" precision="0" nullable="false" jdbcType="12"/>
       <column name="slug" sqlType="VARCHAR" length="255" precision="0" nullable="false" jdbcType="12"/>
+      <column name="posts" sqlType="INT UNSIGNED" length="10" precision="0" nullable="false" jdbcType="4" def="MA=="/>
       <column name="message" sqlType="MEDIUMTEXT" length="16777215" precision="0" nullable="false" jdbcType="-1"/>
+      <column name="likes" sqlType="INT" length="10" precision="0" nullable="false" jdbcType="4" def="MA=="/>
+      <column name="dislikes" sqlType="INT" length="10" precision="0" nullable="false" jdbcType="4" def="MA=="/>
+      <column name="points" sqlType="INT" length="10" precision="0" nullable="false" jdbcType="4" def="MA=="/>
       <column name="user" sqlType="VARCHAR" length="255" precision="0" nullable="false" jdbcType="12"/>
       <column name="forum" sqlType="VARCHAR" length="255" precision="0" nullable="false" jdbcType="12"/>
-      <column name="forum_id" sqlType="BIGINT UNSIGNED" length="20" precision="0" nullable="false" jdbcType="-5"/>
-      <column name="user_id" sqlType="BIGINT UNSIGNED" length="20" precision="0" nullable="false" jdbcType="-5"/>
-      <column name="posts" sqlType="INT UNSIGNED" length="10" precision="0" nullable="false" jdbcType="4" def="MA=="/>
-      <column name="points" sqlType="INT UNSIGNED" length="10" precision="0" nullable="false" jdbcType="4" def="MA=="/>
-      <primary-key name="PRIMARY" columns="id,forum_id,user_id"/>
-      <foreign-key name="fk_thread_forum1" columns="forum_id" ref-table="forum" ref-schema="" ref-catalog="forum_db" ref-columns="id" update-rule="3" delete-rule="3" deferrability="2"/>
-      <foreign-key name="fk_thread_user1" columns="user_id" ref-table="user" ref-schema="" ref-catalog="forum_db" ref-columns="id" update-rule="3" delete-rule="3" deferrability="2"/>
+      <primary-key name="PRIMARY" columns="id"/>
+      <foreign-key name="fk_thread_forum1" columns="forum" ref-table="forum" ref-schema="" ref-catalog="forum_db" ref-columns="short_name" update-rule="3" delete-rule="3" deferrability="2"/>
+      <foreign-key name="fk_thread_user1" columns="user" ref-table="user" ref-schema="" ref-catalog="forum_db" ref-columns="email" update-rule="3" delete-rule="3" deferrability="2"/>
       <exported-key name="fk_post_thread1" table="post" schema="" catalog="forum_db" columns="thread_id"/>
       <exported-key name="fk_threadId_to_thread_id" table="subscriptions" schema="" catalog="forum_db" columns="thread_id"/>
-      <index name="slug_UNIQUE" unique="true" columns="slug"/>
-      <index name="fk_thread_forum1_idx" unique="false" columns="forum_id"/>
-      <index name="fk_thread_user1_idx" unique="false" columns="user_id"/>
+      <index name="forum_INDEX" unique="false" columns="forum"/>
+      <index name="user_INDEX" unique="false" columns="user"/>
     </table>
     <table name="user" schema="" catalog="forum_db" type="TABLE">
       <column name="id" sqlType="BIGINT UNSIGNED" length="20" precision="0" nullable="false" jdbcType="-5" autoIncrement="true"/>
-      <column name="username" sqlType="VARCHAR" length="255" precision="0" nullable="false" jdbcType="12"/>
+      <column name="username" sqlType="VARCHAR" length="255" precision="0" nullable="true" jdbcType="12"/>
       <column name="password" sqlType="VARCHAR" length="255" precision="0" nullable="false" jdbcType="12"/>
       <column name="email" sqlType="VARCHAR" length="255" precision="0" nullable="false" jdbcType="12"/>
       <column name="name" sqlType="VARCHAR" length="255" precision="0" nullable="true" jdbcType="12"/>
-      <column name="isAnonymous" sqlType="TINYINT UNSIGNED" length="3" precision="0" nullable="false" jdbcType="-6"/>
+      <column name="isAnonymous" sqlType="TINYINT UNSIGNED" length="3" precision="0" nullable="false" jdbcType="-6" def="MA=="/>
       <column name="about" sqlType="VARCHAR" length="255" precision="0" nullable="true" jdbcType="12"/>
       <primary-key name="PRIMARY" columns="id"/>
       <exported-key name="fk_user_has_user_user" table="followers" schema="" catalog="forum_db" columns="follower"/>
       <exported-key name="fk_user_has_user_user1" table="followers" schema="" catalog="forum_db" columns="followee"/>
-      <exported-key name="fk_forum_user1" table="forum" schema="" catalog="forum_db" columns="user_id"/>
-      <exported-key name="fk_post_user1" table="post" schema="" catalog="forum_db" columns="user_id"/>
+      <exported-key name="fk_forum_user1" table="forum" schema="" catalog="forum_db" columns="user"/>
+      <exported-key name="fk_post_user1" table="post" schema="" catalog="forum_db" columns="user"/>
       <exported-key name="fk_userId_to_user_id" table="subscriptions" schema="" catalog="forum_db" columns="user_id"/>
-      <exported-key name="fk_thread_user1" table="thread" schema="" catalog="forum_db" columns="user_id"/>
+      <exported-key name="fk_thread_user1" table="thread" schema="" catalog="forum_db" columns="user"/>
       <index name="email_UNIQUE" unique="true" columns="email"/>
       <index name="username_UNIQUE" unique="true" columns="username"/>
     </table>

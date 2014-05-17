@@ -2,6 +2,9 @@ SET @OLD_UNIQUE_CHECKS=@@UNIQUE_CHECKS, UNIQUE_CHECKS=0;
 SET @OLD_FOREIGN_KEY_CHECKS=@@FOREIGN_KEY_CHECKS, FOREIGN_KEY_CHECKS=0;
 SET @OLD_SQL_MODE=@@SQL_MODE, SQL_MODE='TRADITIONAL,ALLOW_INVALID_DATES';
 
+-- -----------------------------------------------------
+-- Schema forum_db
+-- -----------------------------------------------------
 DROP SCHEMA IF EXISTS `forum_db` ;
 CREATE SCHEMA IF NOT EXISTS `forum_db` DEFAULT CHARACTER SET utf8 COLLATE utf8_general_ci ;
 USE `forum_db` ;
@@ -21,8 +24,7 @@ CREATE TABLE IF NOT EXISTS `forum_db`.`user` (
   `about` VARCHAR(255) NULL,
   PRIMARY KEY (`id`),
   UNIQUE INDEX `email_UNIQUE` (`email` ASC),
-  UNIQUE INDEX `username_UNIQUE` (`username` ASC),
-  INDEX `email_INDEX` (`email` ASC))
+  UNIQUE INDEX `username_UNIQUE` (`username` ASC))
 ENGINE = InnoDB;
 
 
@@ -36,16 +38,13 @@ CREATE TABLE IF NOT EXISTS `forum_db`.`forum` (
   `name` VARCHAR(255) NOT NULL,
   `short_name` VARCHAR(255) NOT NULL,
   `user` VARCHAR(255) NOT NULL,
-  `user_id` BIGINT UNSIGNED NOT NULL,
-  PRIMARY KEY (`id`, `user_id`),
+  PRIMARY KEY (`id`),
   UNIQUE INDEX `short_name_UNIQUE` (`short_name` ASC),
-  INDEX `fk_forum_user1_idx` (`user_id` ASC),
-  INDEX `short_name_INDEX` (`short_name` ASC),
-  INDEX `user_INDEX` (`user` ASC),
+  INDEX `fk_forum_user1_idx` (`user` ASC),
   CONSTRAINT `fk_forum_user1`
-    FOREIGN KEY (`user_id`)
-    REFERENCES `forum_db`.`user` (`id`)
-    ON DELETE RESTRICT
+    FOREIGN KEY (`user`)
+    REFERENCES `forum_db`.`user` (`email`)
+    ON DELETE NO ACTION
     ON UPDATE NO ACTION)
 ENGINE = InnoDB;
 
@@ -69,21 +68,17 @@ CREATE TABLE IF NOT EXISTS `forum_db`.`thread` (
   `points` INT NOT NULL DEFAULT 0,
   `user` VARCHAR(255) NOT NULL,
   `forum` VARCHAR(255) NOT NULL,
-  `forum_id` BIGINT UNSIGNED NOT NULL,
-  `user_id` BIGINT UNSIGNED NOT NULL,
-  PRIMARY KEY (`id`, `forum_id`, `user_id`),
-  INDEX `fk_thread_forum1_idx` (`forum_id` ASC),
-  INDEX `fk_thread_user1_idx` (`user_id` ASC),
+  PRIMARY KEY (`id`),
   INDEX `user_INDEX` (`user` ASC),
   INDEX `forum_INDEX` (`forum` ASC),
   CONSTRAINT `fk_thread_forum1`
-    FOREIGN KEY (`forum_id`)
-    REFERENCES `forum_db`.`forum` (`id`)
+    FOREIGN KEY (`forum`)
+    REFERENCES `forum_db`.`forum` (`short_name`)
     ON DELETE RESTRICT
     ON UPDATE NO ACTION,
   CONSTRAINT `fk_thread_user1`
-    FOREIGN KEY (`user_id`)
-    REFERENCES `forum_db`.`user` (`id`)
+    FOREIGN KEY (`user`)
+    REFERENCES `forum_db`.`user` (`email`)
     ON DELETE RESTRICT
     ON UPDATE NO ACTION)
 ENGINE = InnoDB;
@@ -109,17 +104,15 @@ CREATE TABLE IF NOT EXISTS `forum_db`.`post` (
   `points` INT NOT NULL DEFAULT 0,
   `forum` VARCHAR(255) NOT NULL,
   `user` VARCHAR(255) NOT NULL,
-  `user_id` BIGINT UNSIGNED NOT NULL,
   `thread_id` BIGINT UNSIGNED NOT NULL,
-  PRIMARY KEY (`id`, `user_id`, `thread_id`),
-  INDEX `fk_post_user1_idx` (`user_id` ASC),
-  INDEX `fk_post_thread1_idx` (`thread_id` ASC),
+  PRIMARY KEY (`id`, `thread_id`),
   INDEX `fk_post_parent_1_idx` (`parent` ASC),
   INDEX `user_INDEX` (`user` ASC),
   INDEX `forum_INDEX` (`forum` ASC),
+  INDEX `fk_post_thread1_idx` (`thread_id` ASC),
   CONSTRAINT `fk_post_user1`
-    FOREIGN KEY (`user_id`)
-    REFERENCES `forum_db`.`user` (`id`)
+    FOREIGN KEY (`user`)
+    REFERENCES `forum_db`.`user` (`email`)
     ON DELETE RESTRICT
     ON UPDATE NO ACTION,
   CONSTRAINT `fk_post_thread1`
@@ -130,6 +123,11 @@ CREATE TABLE IF NOT EXISTS `forum_db`.`post` (
   CONSTRAINT `fk_post_parent_1`
     FOREIGN KEY (`parent`)
     REFERENCES `forum_db`.`post` (`id`)
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION,
+  CONSTRAINT `fk_post_forum1`
+    FOREIGN KEY (`forum`)
+    REFERENCES `forum_db`.`forum` (`short_name`)
     ON DELETE NO ACTION
     ON UPDATE NO ACTION)
 ENGINE = InnoDB;
@@ -146,7 +144,6 @@ CREATE TABLE IF NOT EXISTS `forum_db`.`followers` (
   `unfollowed` TINYINT NOT NULL DEFAULT 0,
   PRIMARY KEY (`follower`, `followee`),
   INDEX `fk_user_has_user_user1_idx` (`followee` ASC),
-  INDEX `fk_user_has_user_user_idx` (`follower` ASC),
   CONSTRAINT `fk_user_has_user_user`
     FOREIGN KEY (`follower`)
     REFERENCES `forum_db`.`user` (`id`)

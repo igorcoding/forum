@@ -9,14 +9,14 @@ from api_helpers.user_helper import get_id_by_email
 def create(ds, **args):
     required(['name', 'short_name', 'user'], args)
 
-    user_id = get_id_by_email(ds, args['user'])
+    # user_id = get_id_by_email(ds, args['user'])
 
     db = ds.get_db()
     c = db.cursor()
     try:
-        c.execute(u"""INSERT INTO forum (name, short_name, user, user_id)
-                     VALUES (%s, %s, %s, %s)""",
-                  (args['name'], args['short_name'], args['user'], user_id))
+        c.execute(u"""INSERT INTO forum (name, short_name, user)
+                     VALUES (%s, %s, %s)""",
+                  (args['name'], args['short_name'], args['user']))
         _id = db.insert_id()
 
         db.commit()
@@ -35,8 +35,6 @@ def create(ds, **args):
     }
 
     return data
-
-    # return details(ds, forum=args['short_name'])
 
 
 def details(ds, **args):
@@ -59,7 +57,7 @@ def details(ds, **args):
     else:
         user_data = email
 
-    del forum_data['user_id']
+    # del forum_data['user_id']
     forum_data['user'] = user_data
 
     return forum_data
@@ -81,15 +79,16 @@ def listUsers(ds, **args):
 
     query = StringBuilder()
     query.append(u"""SELECT DISTINCT user FROM post
-                     WHERE forum = %s""")
+                     INNER JOIN user ON post.user = user.email
+                     WHERE post.forum = %s""")
     params = (args['forum'],)
 
     if args['since_id']:
-        query.append(u"""AND id >= %s""")
+        query.append(u"""AND user.id >= %s""")
         params += (args['since_id'],)
 
     if args['order']:
-        query.append(u"""ORDER BY user_id %s""" % args['order'])
+        query.append(u"""ORDER BY user.id %s""" % args['order'])
 
     if args['limit']:
         query.append(u"""LIMIT %d""" % int(args['limit']))

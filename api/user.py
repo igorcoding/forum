@@ -1,4 +1,3 @@
-import time
 import post
 from api.api_helpers.common_helper import *
 from api.api_helpers.user_helper import *
@@ -34,16 +33,6 @@ def create(ds, **args):
         'name': args['name'],
         'username': args['username']
     }
-
-    # db = ds.get_db()
-    # c = db.cursor()
-    # c.execute(u"""SELECT * FROM user
-    #            WHERE email = %s""", (args['email'],))
-    # user_data = c.fetchone()
-    # c.close()
-    # ds.close_last()
-
-    # del user_data['password']
 
     return user_data
 
@@ -115,6 +104,7 @@ def list_followers_following(ds, who, handler, **args):
     db = ds.get_db()
     c = db.cursor()
     c.execute(str(query), params)
+    # rows = c.fetchall()
 
     res = [handler(ds, row['email']) for row in c]
 
@@ -133,7 +123,6 @@ def listFollowing(ds, handler=get_info_by_email, **args):
 
 
 def listPosts(ds, **args):
-    # TODO: date parameter problem
     return post.list(ds, **args)
 
 

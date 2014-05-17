@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
-  <component name="DataSourceManagerImpl" format="xml" hash="2893983227">
+  <component name="DataSourceManagerImpl" format="xml" hash="3503067535">
     <data-source source="LOCAL" name="forum_db" uuid="c3def699-6238-4976-bf21-627e69bc61a1">
       <driver-ref>mysql</driver-ref>
       <jdbc-driver>com.mysql.jdbc.Driver</jdbc-driver>
@@ -10,7 +10,7 @@
       <schema-pattern>forum_db.*</schema-pattern>
       <libraries>
         <library>
-          <url>file:///opt/mysql-connector-java/mysql-connector-java-5.1.26-bin.jar</url>
+          <url>file:///usr/share/java/mysql-connector-java.jar</url>
         </library>
       </libraries>
     </data-source>
