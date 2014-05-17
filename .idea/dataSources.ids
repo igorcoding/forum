@@ -8,12 +8,12 @@
     <case-sensitivity plain-identifiers="exact" quoted-identifiers="exact"/>
     <schema name="" catalog="forum_db"/>
     <table name="followers" schema="" catalog="forum_db" type="TABLE">
-      <column name="follower" sqlType="BIGINT UNSIGNED" length="20" precision="0" nullable="false" jdbcType="-5"/>
-      <column name="followee" sqlType="BIGINT UNSIGNED" length="20" precision="0" nullable="false" jdbcType="-5"/>
+      <column name="follower" sqlType="VARCHAR" length="255" precision="0" nullable="false" jdbcType="12"/>
+      <column name="followee" sqlType="VARCHAR" length="255" precision="0" nullable="false" jdbcType="12"/>
       <column name="unfollowed" sqlType="TINYINT" length="3" precision="0" nullable="false" jdbcType="-6" def="MA=="/>
       <primary-key name="PRIMARY" columns="follower,followee"/>
-      <foreign-key name="fk_user_has_user_user" columns="follower" ref-table="user" ref-schema="" ref-catalog="forum_db" ref-columns="id" update-rule="3" delete-rule="3" deferrability="2"/>
-      <foreign-key name="fk_user_has_user_user1" columns="followee" ref-table="user" ref-schema="" ref-catalog="forum_db" ref-columns="id" update-rule="3" delete-rule="3" deferrability="2"/>
+      <foreign-key name="fk_user_has_user_user" columns="follower" ref-table="user" ref-schema="" ref-catalog="forum_db" ref-columns="email" update-rule="3" delete-rule="3" deferrability="2"/>
+      <foreign-key name="fk_user_has_user_user1" columns="followee" ref-table="user" ref-schema="" ref-catalog="forum_db" ref-columns="email" update-rule="3" delete-rule="3" deferrability="2"/>
       <index name="fk_user_has_user_user1_idx" unique="false" columns="followee"/>
     </table>
     <table name="forum" schema="" catalog="forum_db" type="TABLE">

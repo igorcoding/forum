@@ -3,7 +3,6 @@ import thread
 import user
 from util.StringBuilder import *
 from api.api_helpers.common_helper import required, optional, make_boolean, semi_required, check_empty
-from api.api_helpers.user_helper import get_id_by_email
 
 
 def create(ds, **args):

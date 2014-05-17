@@ -81,18 +81,18 @@ def list_followers_following(ds, who, handler, **args):
     def next_val(v):
         return (v + 1) % len(possibles)
 
-    user_id = get_id_by_email(ds, args['user'])
+    # user_id = get_id_by_email(ds, args['user'])
 
     query = StringBuilder()
     query.append(u"""SELECT email FROM followers
-                    INNER JOIN user ON followers.%s = user.id
+                    INNER JOIN user ON followers.%s = user.email
                     WHERE %s """ % (possibles[val], possibles[next_val(val)])
                  + u"""= %s AND unfollowed = 0""")
 
-    params = (user_id, )
+    params = (args['user'], )
 
     if args['since_id']:
-        query.append(u"""AND %s """ % (possibles[val],) + u""">= %s""")
+        query.append(u"""AND user.id >= %s""")
         params += (args['since_id'],)
 
     if args['order']:
@@ -129,9 +129,9 @@ def listPosts(ds, **args):
 def follow(ds, **args):
     required(['follower', 'followee'], args)
 
-    follower_id = get_id_by_email(ds, args['follower'])
-    followee_id = get_id_by_email(ds, args['followee'])
-    params = (follower_id, followee_id)
+    # follower_id = get_id_by_email(ds, args['follower'])
+    # followee_id = get_id_by_email(ds, args['followee'])
+    params = (args['follower'], args['followee'])
 
     db = ds.get_db()
     c = db.cursor()
@@ -166,9 +166,9 @@ def follow(ds, **args):
 def unfollow(ds, **args):
     required(['follower', 'followee'], args)
 
-    follower_id = get_id_by_email(ds, args['follower'])
-    followee_id = get_id_by_email(ds, args['followee'])
-    params = (follower_id, followee_id)
+    # follower_id = get_id_by_email(ds, args['follower'])
+    # followee_id = get_id_by_email(ds, args['followee'])
+    params = (args['follower'], args['followee'])
 
     db = ds.get_db()
     c = db.cursor()

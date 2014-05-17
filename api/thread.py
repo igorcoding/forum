@@ -3,7 +3,6 @@ import post
 import user
 from util.StringBuilder import *
 from api.api_helpers.common_helper import *
-from api.api_helpers.forum_helper import get_id_by_short_name
 from api.api_helpers.user_helper import get_id_by_email
 
 

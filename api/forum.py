@@ -3,13 +3,10 @@ import user
 import thread as threads
 from util.StringBuilder import *
 from api_helpers.common_helper import *
-from api_helpers.user_helper import get_id_by_email
 
 
 def create(ds, **args):
     required(['name', 'short_name', 'user'], args)
-
-    # user_id = get_id_by_email(ds, args['user'])
 
     db = ds.get_db()
     c = db.cursor()
