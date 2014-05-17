@@ -139,19 +139,19 @@ ENGINE = InnoDB;
 DROP TABLE IF EXISTS `forum_db`.`followers` ;
 
 CREATE TABLE IF NOT EXISTS `forum_db`.`followers` (
-  `follower` BIGINT UNSIGNED NOT NULL,
-  `followee` BIGINT UNSIGNED NOT NULL,
+  `follower` VARCHAR(255) NOT NULL,
+  `followee` VARCHAR(255) NOT NULL,
   `unfollowed` TINYINT NOT NULL DEFAULT 0,
   PRIMARY KEY (`follower`, `followee`),
   INDEX `fk_user_has_user_user1_idx` (`followee` ASC),
   CONSTRAINT `fk_user_has_user_user`
     FOREIGN KEY (`follower`)
-    REFERENCES `forum_db`.`user` (`id`)
+    REFERENCES `forum_db`.`user` (`email`)
     ON DELETE RESTRICT
     ON UPDATE NO ACTION,
   CONSTRAINT `fk_user_has_user_user1`
     FOREIGN KEY (`followee`)
-    REFERENCES `forum_db`.`user` (`id`)
+    REFERENCES `forum_db`.`user` (`email`)
     ON DELETE RESTRICT
     ON UPDATE NO ACTION)
 ENGINE = InnoDB;
@@ -163,22 +163,21 @@ ENGINE = InnoDB;
 DROP TABLE IF EXISTS `forum_db`.`subscriptions` ;
 
 CREATE TABLE IF NOT EXISTS `forum_db`.`subscriptions` (
-  `user_id` BIGINT UNSIGNED NOT NULL,
+  `user` VARCHAR(255) NOT NULL,
   `thread_id` BIGINT UNSIGNED NOT NULL,
-  `unsubscribed` TINYINT NOT NULL,
-  PRIMARY KEY (`user_id`, `thread_id`),
-  INDEX `fk_user_subscribed_thread1_idx` (`thread_id` ASC),
-  INDEX `fk_userId_to_user_id_idx` (`user_id` ASC),
-  CONSTRAINT `fk_userId_to_user_id`
-    FOREIGN KEY (`user_id`)
-    REFERENCES `forum_db`.`user` (`id`)
-    ON DELETE RESTRICT
-    ON UPDATE RESTRICT,
-  CONSTRAINT `fk_threadId_to_thread_id`
+  `unsubscribed` TINYINT NOT NULL DEFAULT 0,
+  INDEX `fk_subscriptions_user1_idx` (`user` ASC),
+  INDEX `fk_subscriptions_thread1_idx` (`thread_id` ASC),
+  CONSTRAINT `fk_subscriptions_user1`
+    FOREIGN KEY (`user`)
+    REFERENCES `forum_db`.`user` (`email`)
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION,
+  CONSTRAINT `fk_subscriptions_thread1`
     FOREIGN KEY (`thread_id`)
     REFERENCES `forum_db`.`thread` (`id`)
-    ON DELETE RESTRICT
-    ON UPDATE RESTRICT)
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION)
 ENGINE = InnoDB;
 
 SET SQL_MODE = '';
