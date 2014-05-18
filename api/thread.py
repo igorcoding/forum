@@ -16,7 +16,8 @@ def create(ds, **args):
     forum_id = get_id_by_short_name(ds, args['forum'])
     user_id = get_id_by_email(ds, args['user'])
 
-    db = ds.get_db()
+    conn = ds.get_db()
+    db = conn['conn']
     c = db.cursor()
     try:
         c.execute(u"""INSERT INTO thread (forum, forum_id, title, isClosed, user, user_id, date, message, slug, isDeleted)
@@ -30,9 +31,8 @@ def create(ds, **args):
         raise e
     finally:
         c.close()
-        ds.close_last()
+        ds.close(conn['id'])
 
-    # TODO: get rid off details
     return {
         'id': thread_id,
         'date': args['date'],
@@ -53,7 +53,8 @@ def create(ds, **args):
 def close(ds, **args):
     required(['thread'], args)
 
-    db = ds.get_db()
+    conn = ds.get_db()
+    db = conn['conn']
     c = db.cursor()
 
     try:
@@ -67,7 +68,7 @@ def close(ds, **args):
         raise e
     finally:
         c.close()
-        ds.close_last()
+        ds.close(conn['id'])
 
     return {'thread': args['thread']}
 
@@ -76,13 +77,14 @@ def details(ds, **args):
     required(['thread'], args)
     optional('related', args, [], ['user', 'forum'])
 
-    db = ds.get_db()
+    conn = ds.get_db()
+    db = conn['conn']
     c = db.cursor()
     c.execute(u"""SELECT * FROM thread
                WHERE id = %s""", (args['thread'],))
     thread_data = c.fetchone()
     c.close()
-    ds.close_last()
+    ds.close(conn['id'])
 
     check_empty(thread_data, u"No thread found with that id")
 
@@ -130,14 +132,15 @@ def list(ds, orderby='date', **args):
     if args['limit']:
         query.append(u"""LIMIT %d""" % int(args['limit']))
 
-    db = ds.get_db()
+    conn = ds.get_db()
+    db = conn['conn']
     c = db.cursor()
     c.execute(str(query), params)
 
     threads = [details(ds, thread=row['id'], related=args['related']) for row in c]
 
     c.close()
-    ds.close_last()
+    ds.close(conn['id'])
 
     return threads
 
@@ -149,7 +152,8 @@ def listPosts(ds, **args):
 def open(ds, **args):
     required(['thread'], args)
 
-    db = ds.get_db()
+    conn = ds.get_db()
+    db = conn['conn']
     c = db.cursor()
     try:
         c.execute(u"""UPDATE thread
@@ -162,7 +166,7 @@ def open(ds, **args):
         raise e
     finally:
         c.close()
-        ds.close_last()
+        ds.close(conn['id'])
 
     return {'thread': args['thread']}
 
@@ -170,7 +174,8 @@ def open(ds, **args):
 def remove(ds, **args):
     required(['thread'], args)
 
-    db = ds.get_db()
+    conn = ds.get_db()
+    db = conn['conn']
     c = db.cursor()
     try:
         c.execute(u"""UPDATE thread
@@ -183,7 +188,7 @@ def remove(ds, **args):
         raise e
     finally:
         c.close()
-        ds.close_last()
+        ds.close(conn['id'])
 
     return {'thread': args['thread']}
 
@@ -191,7 +196,8 @@ def remove(ds, **args):
 def restore(ds, **args):
     required(['thread'], args)
 
-    db = ds.get_db()
+    conn = ds.get_db()
+    db = conn['conn']
     c = db.cursor()
     try:
         c.execute(u"""UPDATE thread
@@ -205,7 +211,7 @@ def restore(ds, **args):
         raise e
     finally:
         c.close()
-        ds.close_last()
+        ds.close(conn['id'])
 
     return {'thread': args['thread']}
 
@@ -216,7 +222,8 @@ def subscribe(ds, **args):
     user_id = get_id_by_email(ds, args['user'])
     thread_id = args['thread']
 
-    db = ds.get_db()
+    conn = ds.get_db()
+    db = conn['conn']
     c = db.cursor()
     c.execute(u"""SELECT * FROM subscriptions
                  WHERE user_id = %s AND thread_id = %s""",
@@ -240,7 +247,7 @@ def subscribe(ds, **args):
         raise e
     finally:
         c.close()
-        ds.close_last()
+        ds.close(conn['id'])
 
     return {
         'thread': args['thread'],
@@ -254,7 +261,8 @@ def unsubscribe(ds, **args):
     user_id = get_id_by_email(ds, args['user'])
     thread_id = args['thread']
 
-    db = ds.get_db()
+    conn = ds.get_db()
+    db = conn['conn']
     c = db.cursor()
     try:
         c.execute(u"""UPDATE subscriptions SET unsubscribed = 1
@@ -266,7 +274,7 @@ def unsubscribe(ds, **args):
         raise e
     finally:
         c.close()
-        ds.close_last()
+        ds.close(conn['id'])
 
     return {
         'thread': args['thread'],
@@ -277,7 +285,8 @@ def unsubscribe(ds, **args):
 def update(ds, **args):
     required(['message', 'slug', 'thread'], args)
 
-    db = ds.get_db()
+    conn = ds.get_db()
+    db = conn['conn']
     c = db.cursor()
     try:
         c.execute(u"""UPDATE thread
@@ -291,7 +300,7 @@ def update(ds, **args):
         raise e
     finally:
         c.close()
-        ds.close_last()
+        ds.close(conn['id'])
 
     return details(ds, thread=args['thread'])
 
@@ -300,7 +309,8 @@ def vote(ds, **args):
     required(['vote', 'thread'], args)
     args['vote'] = int(args['vote'])
 
-    db = ds.get_db()
+    conn = ds.get_db()
+    db = conn['conn']
     c = db.cursor()
     try:
         if args['vote'] > 0:
@@ -327,6 +337,6 @@ def vote(ds, **args):
         raise e
     finally:
         c.close()
-        ds.close_last()
+        ds.close(conn['id'])
 
     return details(ds, thread=args['thread'])

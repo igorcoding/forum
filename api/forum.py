@@ -11,34 +11,45 @@ def create(ds, **args):
 
     user_id = get_id_by_email(ds, args['user'])
 
-    db = ds.get_db()
+    conn = ds.get_db()
+    db = conn['conn']
     c = db.cursor()
     try:
         c.execute(u"""INSERT INTO forum (name, short_name, user, user_id)
                      VALUES (%s, %s, %s, %s)""",
                   (args['name'], args['short_name'], args['user'], user_id))
+        _id = db.insert_id()
+
         db.commit()
     except Exception as e:
         db.rollback()
         raise e
     finally:
         c.close()
-        ds.close_last()
+        ds.close(conn['id'])
 
-    return details(ds, forum=args['short_name'])
+    data = {
+        'id': _id,
+        'name': args['name'],
+        'short_name': args['short_name'],
+        'user': args['user']
+    }
+
+    return data
 
 
 def details(ds, **args):
     required(['forum'], args)
     optional('related', args, [], ['user'])
 
-    db = ds.get_db()
+    conn = ds.get_db()
+    db = conn['conn']
     c = db.cursor()
     c.execute(u"""SELECT * FROM forum
                WHERE forum.short_name = %s""", (args['forum'],))
     forum_data = c.fetchone()
     c.close()
-    ds.close_last()
+    ds.close(conn['id'])
 
     check_empty(forum_data, u"No forum found with that short_name")
 
@@ -83,14 +94,15 @@ def listUsers(ds, **args):
     if args['limit']:
         query.append(u"""LIMIT %d""" % int(args['limit']))
 
-    db = ds.get_db()
+    conn = ds.get_db()
+    db = conn['conn']
     c = db.cursor()
     c.execute(str(query), params)
 
     users_list = [user.details(ds, user=u['user']) for u in c]
 
     c.close()
-    ds.close_last()
+    ds.close(conn['id'])
 
     return users_list
 

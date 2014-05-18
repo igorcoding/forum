@@ -2,7 +2,7 @@
 import os
 import sys
 
-root_dir = os.path.join('/', 'home', 'igor', 'Documents', 'projects', 'python', 'forum')
+root_dir = os.path.join('/', 'home', 'igor', 'Projects', 'python', 'forum')
 os.chdir(root_dir)
 sys.path.append(root_dir)
 
@@ -19,7 +19,9 @@ from tornado.options import define, options
 
 from api import api_executor
 from api.util.response_helpers import *
+from api.util.DataService import DataService
 
+ds = DataService()
 
 def async_task(func):
     @functools.wraps(func)
@@ -67,7 +69,7 @@ class Handler(ThreadMixin):
     res = None
 
     def _worker(self):
-        self.res = api_executor.execute(self.entity, self.action, self.data)
+        self.res = api_executor.execute(ds, self.entity, self.action, self.data)
 
     @tornado.web.asynchronous
     def get(self, entity, action):
@@ -115,6 +117,7 @@ def main():
     try:
         tornado.ioloop.IOLoop.instance().start()
     except KeyboardInterrupt:
+        ds.close_all()
         logging.info("Server stopped")
 
 

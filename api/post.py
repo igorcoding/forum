@@ -17,7 +17,8 @@ def create(ds, **args):
 
     user_id = get_id_by_email(ds, args['user'])
 
-    db = ds.get_db()
+    conn = ds.get_db()
+    db = conn['conn']
     c = db.cursor()
     try:
         c.execute(u"""INSERT INTO post (date, thread_id, message, user, user_id, forum, parent,
@@ -37,22 +38,37 @@ def create(ds, **args):
         raise e
     finally:
         c.close()
-        ds.close_last()
+        ds.close(conn['id'])
 
-    return details(ds, post=post_id)
+    data = {
+        'date': args['date'],
+        'forum': args['forum'],
+        'id': post_id,
+        'isApproved': args['isApproved'],
+        'isDeleted': args['isDeleted'],
+        'isEdited': args['isEdited'],
+        'isHighlighted': args['isHighlighted'],
+        'isSpam': args['isSpam'],
+        'message': args['message'],
+        'thread': args['thread'],
+        'user': args['user']
+    }
+
+    return data
 
 
 def details(ds, **args):
     required(['post'], args)
     optional('related', args, [], ['user', 'thread', 'forum'])
 
-    db = ds.get_db()
+    conn = ds.get_db()
+    db = conn['conn']
     c = db.cursor()
     c.execute(u"""SELECT * FROM post
                WHERE id = %s""", (args['post'],))
     post_data = c.fetchone()
     c.close()
-    ds.close_last()
+    ds.close(conn['id'])
 
     check_empty(post_data, u"No post found with that id")
 
@@ -111,14 +127,15 @@ def list(ds, orderby='date', **args):
     if args['limit']:
         query.append(u"""LIMIT %d""" % int(args['limit']))
 
-    db = ds.get_db()
+    conn = ds.get_db()
+    db = conn['conn']
     c = db.cursor()
     c.execute(str(query), params)
 
     posts = [details(ds, post=row['id'], related=args['related']) for row in c]
 
     c.close()
-    ds.close_last()
+    ds.close(conn['id'])
 
     return posts
 
@@ -126,7 +143,8 @@ def list(ds, orderby='date', **args):
 def remove(ds, **args):
     required(['post'], args)
 
-    db = ds.get_db()
+    conn = ds.get_db()
+    db = conn['conn']
     c = db.cursor()
     try:
         c.execute(u"""UPDATE post
@@ -139,7 +157,7 @@ def remove(ds, **args):
         raise e
     finally:
         c.close()
-        ds.close_last()
+        ds.close(conn['id'])
 
     return {'post': args['post']}
 
@@ -147,7 +165,8 @@ def remove(ds, **args):
 def restore(ds, **args):
     required(['post'], args)
 
-    db = ds.get_db()
+    conn = ds.get_db()
+    db = conn['conn']
     c = db.cursor()
     try:
         c.execute(u"""UPDATE post
@@ -160,7 +179,7 @@ def restore(ds, **args):
         raise e
     finally:
         c.close()
-        ds.close_last()
+        ds.close(conn['id'])
 
     return {'post': args['post']}
 
@@ -168,7 +187,8 @@ def restore(ds, **args):
 def update(ds, **args):
     required(['message', 'post'], args)
 
-    db = ds.get_db()
+    conn = ds.get_db()
+    db = conn['conn']
     c = db.cursor()
     try:
         c.execute(u"""UPDATE post
@@ -181,7 +201,7 @@ def update(ds, **args):
         raise e
     finally:
         c.close()
-        ds.close_last()
+        ds.close(conn['id'])
 
     return details(ds, post=int(args['post']))
 
@@ -190,7 +210,8 @@ def vote(ds, **args):
     required(['vote', 'post'], args)
     args['vote'] = int(args['vote'])
 
-    db = ds.get_db()
+    conn = ds.get_db()
+    db = conn['conn']
     c = db.cursor()
     try:
         if args['vote'] > 0:
@@ -217,6 +238,6 @@ def vote(ds, **args):
         raise e
     finally:
         c.close()
-        ds.close_last()
+        ds.close(conn['id'])
 
     return details(ds, post=args['post'])

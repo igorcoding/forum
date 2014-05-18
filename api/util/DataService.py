@@ -1,8 +1,12 @@
+from pprint import pprint
+import threading
 import MySQLdb
 import MySQLdb.cursors
 
 
 class DataService:
+
+
     def __init__(self, config_file='api/db.ini'):
         config = DataService.parse_config(config_file)
 
@@ -12,6 +16,9 @@ class DataService:
         self.username = config['username']
         self.password = config['password']
         self.opened_connections = []
+        self._id = 0
+        self.connections_limit = 10
+        self.lock = threading.Lock()
 
     @staticmethod
     def parse_config(config_file):
@@ -41,13 +48,14 @@ class DataService:
             "TRUNCATE TABLE user",
             "set FOREIGN_KEY_CHECKS=1"
         ]
-        db = self.get_db()
+        conn = self.get_db()
+        db = conn['conn']
         c = db.cursor()
         for statement in clears:
             c.execute(statement)
         c.close()
 
-        self.close_last()
+        self.close(conn['id'])
 
     def connect(self):
         db = MySQLdb.connect(host=self.host,
@@ -57,17 +65,93 @@ class DataService:
                              passwd=self.password,
                              cursorclass=MySQLdb.cursors.SSDictCursor,
                              charset='utf8')
-        self.opened_connections.append(db)
-        return db
+        db_obj = {
+            'id': self._id,
+            'conn': db,
+            'free': False,
+            'forceRemoval': False
+        }
+        if self.get_length() >= self.connections_limit:
+            db_obj['forceRemoval'] = True
 
+        self.opened_connections.append(db_obj)
+        self._id += 1
+        return db_obj
+
+    # @synchronous('lock')
     def get_db(self):
-        return self.connect()
+        self.lock.acquire()
+
+        # if len(self.opened_connections) >= self.connections_limit:
+        #     self.close_free()
+        connection = None
+        if self.get_length() == 0:
+            connection = self.connect()
+        else:
+            for c in self.opened_connections:
+                if c is not None and c['free']:
+                    connection = c
+                    c['free'] = False
+                    break
+            if connection is None:
+                connection = self.connect()
+
+        self.lock.release()
+        # connection = self.connect()
+        return connection
 
     def close_all(self):
-        for db in self.opened_connections:
-            db.close()
+        # print self.opened_connections
+        for c in self.opened_connections:
+            if c is not None and c['free'] is not None:
+                c['conn'].close()
         self.opened_connections = []
 
-    def close_last(self):
-        self.opened_connections[-1].close()
-        self.opened_connections.pop()
+    # @synchronous('lock')
+    def close_free(self):
+        # self.opened_connections[-1]['free'] = True
+        # self.lock.acquire()
+        new_conns = self.opened_connections
+        for c in self.opened_connections:
+            if c['free']:
+                c['conn'].close()
+                c['free'] = None
+                new_conns.pop(c['id'])
+        # print "new_conns length: ", len(new_conns)
+        self.opened_connections = new_conns
+        # self.lock.release()
+        # pprint(self.opened_connections)
+
+    # @synchronous('lock')
+    def close(self, conn_id):
+        # self.opened_connections[-1]['conn'].close()
+        # self.opened_connections.pop()
+        self.lock.acquire()
+        conn = None
+        real_index = None
+        # print "closing %d" % conn_id
+        for i, c in enumerate(self.opened_connections):
+            if c['id'] == conn_id:
+                conn = c
+                real_index = i
+                break
+        try:
+            if conn is not None:
+                if conn['forceRemoval']:
+                    conn['conn'].close()
+                    conn['free'] = None
+                    conn['forceRemoval'] = None
+                    # print '---removing. total: ', self.get_length(), "; id: ", conn_id
+                    self.opened_connections.pop(real_index)
+                    # print 'removing. total: ', self.get_length(), "; id: ", conn_id
+                else:
+                    conn['free'] = True
+                    # print '@@@not removing. total: ', self.get_length(), "; id: ", conn_id
+                # self.opened_connections.pop(conn_id - 1)
+            else:
+                raise Exception('Connection not found')
+        finally:
+            self.lock.release()
+
+    def get_length(self):
+        return len(self.opened_connections)

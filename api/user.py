@@ -9,30 +9,31 @@ def create(ds, **args):
     required(['username', 'name', 'email', 'about'], args)
     optional('isAnonymous', args, False)
 
-    db = ds.get_db()
+    conn = ds.get_db()
+    db = conn['conn']
     c = db.cursor()
     try:
         c.execute(u"""INSERT INTO user (username, name, email, about, isAnonymous, password)
                      VALUES (%s, %s, %s, %s, %s, %s)""",
                   (args['username'], args['name'], args['email'],
                    args['about'], int(args['isAnonymous']), '123456'))
+        _id = db.insert_id()
         db.commit()
     except Exception as e:
         db.rollback()
         raise e
     finally:
         c.close()
-        ds.close_last()
+        ds.close(conn['id'])
 
-    db = ds.get_db()
-    c = db.cursor()
-    c.execute(u"""SELECT * FROM user
-               WHERE email = %s""", (args['email'],))
-    user_data = c.fetchone()
-    c.close()
-    ds.close_last()
-
-    del user_data['password']
+    user_data = {
+        'about': args['about'],
+        'email': args['email'],
+        'id': _id,
+        'isAnonymous': False,
+        'name': args['name'],
+        'username': args['username']
+    }
 
     return user_data
 
@@ -40,7 +41,8 @@ def create(ds, **args):
 def details(ds, **args):
     required(['user'], args)
 
-    db = ds.get_db()
+    conn = ds.get_db()
+    db = conn['conn']
     c = db.cursor()
     c.execute(u"""SELECT * FROM user
                WHERE email = %s""", (args['user'],))
@@ -64,7 +66,7 @@ def details(ds, **args):
     user_data['subscriptions'] = [s['thread_id'] for s in c]
 
     c.close()
-    ds.close_last()
+    ds.close(conn['id'])
 
     return user_data
 
@@ -101,14 +103,15 @@ def list_followers_following(ds, who, handler, **args):
     if args['limit']:
         query.append(u"""LIMIT %d""" % int(args['limit']))
 
-    db = ds.get_db()
+    conn = ds.get_db()
+    db = conn['conn']
     c = db.cursor()
     c.execute(str(query), params)
 
     res = [handler(ds, row['email']) for row in c]
 
     c.close()
-    ds.close_last()
+    ds.close(conn['id'])
 
     return res
 
@@ -133,7 +136,8 @@ def follow(ds, **args):
     followee_id = get_id_by_email(ds, args['followee'])
     params = (follower_id, followee_id)
 
-    db = ds.get_db()
+    conn = ds.get_db()
+    db = conn['conn']
     c = db.cursor()
     c.execute(u"""SELECT * FROM followers
                  WHERE follower = %s AND followee = %s""",
@@ -158,7 +162,7 @@ def follow(ds, **args):
         raise e
     finally:
         c.close()
-        ds.close_last()
+        ds.close(conn['id'])
 
     return details(ds, user=args['follower'])
 
@@ -170,7 +174,8 @@ def unfollow(ds, **args):
     followee_id = get_id_by_email(ds, args['followee'])
     params = (follower_id, followee_id)
 
-    db = ds.get_db()
+    conn = ds.get_db()
+    db = conn['conn']
     c = db.cursor()
     try:
         c.execute(u"""UPDATE followers SET unfollowed=1
@@ -182,7 +187,7 @@ def unfollow(ds, **args):
         raise e
     finally:
         c.close()
-        ds.close_last()
+        ds.close(conn['id'])
 
     return details(ds, user=args['follower'])
 
@@ -190,7 +195,8 @@ def unfollow(ds, **args):
 def updateProfile(ds, **args):
     required(['about', 'user', 'name'], args)
 
-    db = ds.get_db()
+    conn = ds.get_db()
+    db = conn['conn']
     c = db.cursor()
 
     try:
@@ -205,6 +211,6 @@ def updateProfile(ds, **args):
         raise e
     finally:
         c.close()
-        ds.close_last()
+        ds.close(conn['id'])
 
     return details(ds, user=args['user'])
