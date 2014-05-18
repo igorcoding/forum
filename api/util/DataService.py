@@ -48,14 +48,16 @@ class DataService:
             "TRUNCATE TABLE user",
             "set FOREIGN_KEY_CHECKS=1"
         ]
+        self.close_all()
         conn = self.get_db()
         db = conn['conn']
         c = db.cursor()
         for statement in clears:
             c.execute(statement)
         c.close()
-
         self.close(conn['id'])
+        self.close_all()
+
 
     def connect(self):
         db = MySQLdb.connect(host=self.host,

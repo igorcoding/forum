@@ -11,6 +11,7 @@ def create(ds, **args):
 
     user_id = get_id_by_email(ds, args['user'])
 
+    ds.close_all()
     conn = ds.get_db()
     db = conn['conn']
     c = db.cursor()

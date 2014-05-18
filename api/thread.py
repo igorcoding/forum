@@ -16,6 +16,7 @@ def create(ds, **args):
     forum_id = get_id_by_short_name(ds, args['forum'])
     user_id = get_id_by_email(ds, args['user'])
 
+    ds.close_all()
     conn = ds.get_db()
     db = conn['conn']
     c = db.cursor()
@@ -53,6 +54,7 @@ def create(ds, **args):
 def close(ds, **args):
     required(['thread'], args)
 
+    ds.close_all()
     conn = ds.get_db()
     db = conn['conn']
     c = db.cursor()
@@ -71,6 +73,24 @@ def close(ds, **args):
         ds.close(conn['id'])
 
     return {'thread': args['thread']}
+
+
+def _get_thread(**args):
+    return {
+        'id': args['id'],
+        'date': args['date'],
+        'dislikes': args['dislikes'],
+        'likes': args['likes'],
+        'isClosed': args['isClosed'],
+        'isDeleted': args['isDeleted'],
+        'title': args['title'],
+        'slug': args['slug'],
+        'message': args['message'],
+        'user': args['user'],
+        'forum': args['forum'],
+        'posts': args['posts'],
+        'points': args['points']
+    }
 
 
 def details(ds, **args):
@@ -152,6 +172,7 @@ def listPosts(ds, **args):
 def open(ds, **args):
     required(['thread'], args)
 
+    ds.close_all()
     conn = ds.get_db()
     db = conn['conn']
     c = db.cursor()
@@ -174,6 +195,7 @@ def open(ds, **args):
 def remove(ds, **args):
     required(['thread'], args)
 
+    ds.close_all()
     conn = ds.get_db()
     db = conn['conn']
     c = db.cursor()
@@ -196,6 +218,7 @@ def remove(ds, **args):
 def restore(ds, **args):
     required(['thread'], args)
 
+    ds.close_all()
     conn = ds.get_db()
     db = conn['conn']
     c = db.cursor()
@@ -222,6 +245,7 @@ def subscribe(ds, **args):
     user_id = get_id_by_email(ds, args['user'])
     thread_id = args['thread']
 
+    ds.close_all()
     conn = ds.get_db()
     db = conn['conn']
     c = db.cursor()
@@ -261,6 +285,7 @@ def unsubscribe(ds, **args):
     user_id = get_id_by_email(ds, args['user'])
     thread_id = args['thread']
 
+    ds.close_all()
     conn = ds.get_db()
     db = conn['conn']
     c = db.cursor()
@@ -285,6 +310,7 @@ def unsubscribe(ds, **args):
 def update(ds, **args):
     required(['message', 'slug', 'thread'], args)
 
+    ds.close_all()
     conn = ds.get_db()
     db = conn['conn']
     c = db.cursor()
@@ -309,6 +335,7 @@ def vote(ds, **args):
     required(['vote', 'thread'], args)
     args['vote'] = int(args['vote'])
 
+    ds.close_all()
     conn = ds.get_db()
     db = conn['conn']
     c = db.cursor()

@@ -17,6 +17,7 @@ def create(ds, **args):
 
     user_id = get_id_by_email(ds, args['user'])
 
+    ds.close_all()
     conn = ds.get_db()
     db = conn['conn']
     c = db.cursor()
@@ -143,6 +144,7 @@ def list(ds, orderby='date', **args):
 def remove(ds, **args):
     required(['post'], args)
 
+    ds.close_all()
     conn = ds.get_db()
     db = conn['conn']
     c = db.cursor()
@@ -165,6 +167,7 @@ def remove(ds, **args):
 def restore(ds, **args):
     required(['post'], args)
 
+    ds.close_all()
     conn = ds.get_db()
     db = conn['conn']
     c = db.cursor()
@@ -187,6 +190,7 @@ def restore(ds, **args):
 def update(ds, **args):
     required(['message', 'post'], args)
 
+    ds.close_all()
     conn = ds.get_db()
     db = conn['conn']
     c = db.cursor()
@@ -210,6 +214,7 @@ def vote(ds, **args):
     required(['vote', 'post'], args)
     args['vote'] = int(args['vote'])
 
+    ds.close_all()
     conn = ds.get_db()
     db = conn['conn']
     c = db.cursor()

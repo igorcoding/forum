@@ -9,6 +9,7 @@ def create(ds, **args):
     required(['username', 'name', 'email', 'about'], args)
     optional('isAnonymous', args, False)
 
+    ds.close_all()
     conn = ds.get_db()
     db = conn['conn']
     c = db.cursor()
@@ -136,6 +137,7 @@ def follow(ds, **args):
     followee_id = get_id_by_email(ds, args['followee'])
     params = (follower_id, followee_id)
 
+    ds.close_all()
     conn = ds.get_db()
     db = conn['conn']
     c = db.cursor()
@@ -174,6 +176,7 @@ def unfollow(ds, **args):
     followee_id = get_id_by_email(ds, args['followee'])
     params = (follower_id, followee_id)
 
+    ds.close_all()
     conn = ds.get_db()
     db = conn['conn']
     c = db.cursor()
@@ -195,6 +198,7 @@ def unfollow(ds, **args):
 def updateProfile(ds, **args):
     required(['about', 'user', 'name'], args)
 
+    ds.close_all()
     conn = ds.get_db()
     db = conn['conn']
     c = db.cursor()
