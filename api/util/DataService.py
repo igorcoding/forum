@@ -2,6 +2,7 @@ from pprint import pprint
 import threading
 import MySQLdb
 import MySQLdb.cursors
+from threading import Timer
 
 
 class DataService:
@@ -18,7 +19,24 @@ class DataService:
         self.opened_connections = []
         self._id = 0
         self.connections_limit = 10
+
+        self.timer_interval = 60.0
+        self.timer = None
         self.lock = threading.Lock()
+
+    def _create_timer(self):
+        self.timer = Timer(self.close_all, self.timer_interval)
+
+    def _lock(self):
+        if self.timer is not None:
+            self.timer.cancel()
+        self.lock.acquire()
+
+    def _free(self):
+        if self.timer is not None:
+            self.timer.cancel()
+            self._create_timer()
+        self.lock.release()
 
     @staticmethod
     def parse_config(config_file):
@@ -82,7 +100,7 @@ class DataService:
 
     # @synchronous('lock')
     def get_db(self):
-        self.lock.acquire()
+        self._lock()
 
         # if len(self.opened_connections) >= self.connections_limit:
         #     self.close_free()
@@ -98,7 +116,7 @@ class DataService:
             if connection is None:
                 connection = self.connect()
 
-        self.lock.release()
+        self._free()
         # connection = self.connect()
         return connection
 
@@ -128,7 +146,7 @@ class DataService:
     def close(self, conn_id):
         # self.opened_connections[-1]['conn'].close()
         # self.opened_connections.pop()
-        self.lock.acquire()
+        self._lock()
         conn = None
         real_index = None
         # print "closing %d" % conn_id
@@ -153,7 +171,7 @@ class DataService:
             else:
                 raise Exception('Connection not found')
         finally:
-            self.lock.release()
+            self._free()
 
     def get_length(self):
         return len(self.opened_connections)
