@@ -9,7 +9,7 @@ class DataService:
 
 
     def __init__(self, config_file='api/db.ini'):
-        config = DataService.parse_config(config_file)
+        config = DataService._parse_config(config_file)
 
         self.host = config['host']
         self.port = int(config['port'])
@@ -18,28 +18,29 @@ class DataService:
         self.password = config['password']
         self.opened_connections = []
         self._id = 0
-        self.connections_limit = 10
+        self._connections_limit = 10
 
-        self.timer_interval = 60.0
-        self.timer = None
-        self.lock = threading.Lock()
+        self._timer_interval = 60.0
+        self._timer = None
+        self._locker = threading.Lock()
 
     def _create_timer(self):
-        self.timer = Timer(self.close_all, self.timer_interval)
+        self._timer = Timer(self.close_all, self._timer_interval)
+        self._timer.start()
 
     def _lock(self):
-        if self.timer is not None:
-            self.timer.cancel()
-        self.lock.acquire()
+        if self._timer is not None:
+            self._timer.cancel()
+        self._locker.acquire()
 
     def _free(self):
-        if self.timer is not None:
-            self.timer.cancel()
+        if self._timer is not None:
+            self._timer.cancel()
             self._create_timer()
-        self.lock.release()
+        self._locker.release()
 
     @staticmethod
-    def parse_config(config_file):
+    def _parse_config(config_file):
         from ConfigParser import ConfigParser
         config = ConfigParser()
         config.read(config_file)
@@ -91,7 +92,7 @@ class DataService:
             'free': False,
             'forceRemoval': False
         }
-        if self.get_length() >= self.connections_limit:
+        if self.get_length() >= self._connections_limit:
             db_obj['forceRemoval'] = True
 
         self.opened_connections.append(db_obj)
