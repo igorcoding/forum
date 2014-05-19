@@ -20,12 +20,16 @@ class DataService:
         self._id = 0
         self._connections_limit = 10
 
-        self._timer_interval = 60.0
+        self._timer_interval = 30.0
         self._timer = None
         self._locker = threading.Lock()
 
+    def _timer_job(self):
+        print "Force closing all connections with db"
+        self.close_all()
+
     def _create_timer(self):
-        self._timer = Timer(self.close_all, self._timer_interval)
+        self._timer = Timer(self._timer_interval, self._timer_job)
         self._timer.start()
 
     def _lock(self):
@@ -36,7 +40,7 @@ class DataService:
     def _free(self):
         if self._timer is not None:
             self._timer.cancel()
-            self._create_timer()
+        self._create_timer()
         self._locker.release()
 
     @staticmethod
