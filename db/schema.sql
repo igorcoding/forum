@@ -27,9 +27,7 @@ CREATE TABLE IF NOT EXISTS `forum_db`.`user` (
   `about` VARCHAR(255) NULL DEFAULT NULL,
   PRIMARY KEY (`id`),
   UNIQUE INDEX `email_UNIQUE` (`email` ASC),
-  UNIQUE INDEX `username_UNIQUE` (`username` ASC),
-  INDEX `email_INDEX` (`email` ASC),
-  INDEX `name` (`name` ASC))
+  UNIQUE INDEX `username_UNIQUE` (`username` ASC))
 ENGINE = InnoDB
 DEFAULT CHARACTER SET = utf8;
 
@@ -72,7 +70,6 @@ CREATE TABLE IF NOT EXISTS `forum_db`.`forum` (
   PRIMARY KEY (`id`, `user_id`),
   UNIQUE INDEX `short_name_UNIQUE` (`short_name` ASC),
   INDEX `fk_forum_user1_idx` (`user_id` ASC),
-  INDEX `short_name_INDEX` (`short_name` ASC),
   INDEX `user_INDEX` (`user` ASC),
   CONSTRAINT `fk_forum_user1`
     FOREIGN KEY (`user_id`)
@@ -151,6 +148,7 @@ CREATE TABLE IF NOT EXISTS `forum_db`.`post` (
   CONSTRAINT `fk_post_user1`
     FOREIGN KEY (`user_id`)
     REFERENCES `forum_db`.`user` (`id`)
+    ON DELETE RESTRICT
     ON UPDATE NO ACTION,
   CONSTRAINT `fk_post_thread1`
     FOREIGN KEY (`thread_id`)
