@@ -13,18 +13,18 @@ def create(ds, **args):
 
     make_boolean(['isClosed', 'isDeleted'], args)
 
-    forum_id = get_id_by_short_name(ds, args['forum'])
-    user_id = get_id_by_email(ds, args['user'])
+    # forum_id = get_id_by_short_name(ds, args['forum'])
+    # user_id = get_id_by_email(ds, args['user'])
 
     ds.close_all()
     conn = ds.get_db()
     db = conn['conn']
     c = db.cursor()
     try:
-        c.execute(u"""INSERT INTO thread (forum, forum_id, title, isClosed, user, user_id, date, message, slug, isDeleted)
-                     VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)""",
-                  (args['forum'], forum_id, args['title'], int(args['isClosed']), args['user'],
-                   user_id, args['date'], args['message'], args['slug'], int(args['isDeleted'])))
+        c.execute(u"""INSERT INTO thread (forum, title, isClosed, user, date, message, slug, isDeleted)
+                     VALUES (%s, %s, %s, %s, %s, %s, %s, %s)""",
+                  (args['forum'], args['title'], int(args['isClosed']), args['user'],
+                   args['date'], args['message'], args['slug'], int(args['isDeleted'])))
         thread_id = db.insert_id()
         db.commit()
     except Exception as e:
@@ -111,8 +111,8 @@ def details(ds, **args):
     make_boolean(['isClosed', 'isDeleted'], thread_data)
     thread_data['date'] = str(thread_data['date'])
 
-    del thread_data['user_id']
-    del thread_data['forum_id']
+    # del thread_data['user_id']
+    # del thread_data['forum_id']
 
     if 'user' in args['related']:
         thread_data['user'] = user.details(ds, user=thread_data['user'])

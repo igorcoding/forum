@@ -20,7 +20,6 @@ DROP TABLE IF EXISTS `forum_db`.`user` ;
 CREATE TABLE IF NOT EXISTS `forum_db`.`user` (
   `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
   `username` VARCHAR(255) NULL DEFAULT NULL,
-  `password` VARCHAR(255) NOT NULL,
   `email` VARCHAR(255) NOT NULL,
   `name` VARCHAR(255) NULL DEFAULT NULL,
   `isAnonymous` TINYINT(3) UNSIGNED NOT NULL DEFAULT '0',
@@ -92,26 +91,14 @@ CREATE TABLE IF NOT EXISTS `forum_db`.`thread` (
   `slug` VARCHAR(255) NOT NULL,
   `posts` INT(10) UNSIGNED NOT NULL DEFAULT '0',
   `message` MEDIUMTEXT NOT NULL,
-  `likes` INT(11) NOT NULL DEFAULT '0',
   `dislikes` INT(11) NOT NULL DEFAULT '0',
+  `likes` INT(11) NOT NULL DEFAULT '0',
   `points` INT(11) NOT NULL DEFAULT '0',
   `user` VARCHAR(255) NOT NULL,
   `forum` VARCHAR(255) NOT NULL,
-  `forum_id` INT UNSIGNED NOT NULL,
-  `user_id` INT UNSIGNED NOT NULL,
-  PRIMARY KEY (`id`, `forum_id`, `user_id`),
-  INDEX `fk_thread_forum1_idx` (`forum_id` ASC),
-  INDEX `fk_thread_user1_idx` (`user_id` ASC),
+  PRIMARY KEY (`id`),
   INDEX `user_INDEX` (`user` ASC),
-  INDEX `forum_INDEX` (`forum` ASC),
-  CONSTRAINT `fk_thread_forum1`
-    FOREIGN KEY (`forum_id`)
-    REFERENCES `forum_db`.`forum` (`id`)
-    ON UPDATE NO ACTION,
-  CONSTRAINT `fk_thread_user1`
-    FOREIGN KEY (`user_id`)
-    REFERENCES `forum_db`.`user` (`id`)
-    ON UPDATE NO ACTION)
+  INDEX `forum_INDEX` (`forum` ASC))
 ENGINE = InnoDB
 DEFAULT CHARACTER SET = utf8;
 
@@ -139,23 +126,24 @@ CREATE TABLE IF NOT EXISTS `forum_db`.`post` (
   `user_id` INT UNSIGNED NOT NULL,
   `thread_id` INT UNSIGNED NOT NULL,
   PRIMARY KEY (`id`, `user_id`, `thread_id`),
-  INDEX `fk_post_user1_idx` (`user_id` ASC),
-  INDEX `fk_post_thread1_idx` (`thread_id` ASC),
   INDEX `fk_post_parent_1_idx` (`parent` ASC),
   INDEX `user_INDEX` (`user` ASC),
   INDEX `forum_INDEX` (`forum` ASC),
-  CONSTRAINT `fk_post_user1`
-    FOREIGN KEY (`user_id`)
-    REFERENCES `forum_db`.`user` (`id`)
-    ON DELETE RESTRICT
+  INDEX `fk_post_thread1_idx` (`thread_id` ASC),
+  INDEX `fk_post_user1_idx` (`user_id` ASC),
+  CONSTRAINT `fk_post_parent_1`
+    FOREIGN KEY (`parent`)
+    REFERENCES `forum_db`.`post` (`id`)
+    ON DELETE NO ACTION
     ON UPDATE NO ACTION,
   CONSTRAINT `fk_post_thread1`
     FOREIGN KEY (`thread_id`)
     REFERENCES `forum_db`.`thread` (`id`)
+    ON DELETE NO ACTION
     ON UPDATE NO ACTION,
-  CONSTRAINT `fk_post_parent_1`
-    FOREIGN KEY (`parent`)
-    REFERENCES `forum_db`.`post` (`id`)
+  CONSTRAINT `fk_post_user1`
+    FOREIGN KEY (`user_id`)
+    REFERENCES `forum_db`.`user` (`id`)
     ON DELETE NO ACTION
     ON UPDATE NO ACTION)
 ENGINE = InnoDB

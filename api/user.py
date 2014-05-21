@@ -14,10 +14,10 @@ def create(ds, **args):
     db = conn['conn']
     c = db.cursor()
     try:
-        c.execute(u"""INSERT INTO user (username, name, email, about, isAnonymous, password)
-                     VALUES (%s, %s, %s, %s, %s, %s)""",
+        c.execute(u"""INSERT INTO user (username, name, email, about, isAnonymous)
+                     VALUES (%s, %s, %s, %s, %s)""",
                   (args['username'], args['name'], args['email'],
-                   args['about'], int(args['isAnonymous']), '123456'))
+                   args['about'], int(args['isAnonymous'])))
         _id = db.insert_id()
         db.commit()
     except Exception as e:
@@ -56,8 +56,6 @@ def details(ds, **args):
 
     user_data['followers'] = listFollowers(ds, handler=echo_email, user=args['user'])
     user_data['following'] = listFollowing(ds, handler=echo_email, user=args['user'])
-
-    del user_data['password']
 
     # getting subscriptions
     c = db.cursor()
