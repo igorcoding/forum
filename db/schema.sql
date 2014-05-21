@@ -97,8 +97,8 @@ CREATE TABLE IF NOT EXISTS `forum_db`.`thread` (
   `user` VARCHAR(255) NOT NULL,
   `forum` VARCHAR(255) NOT NULL,
   PRIMARY KEY (`id`),
-  INDEX `user_INDEX` (`user` ASC),
-  INDEX `forum_INDEX` (`forum` ASC))
+  INDEX `user_INDEX` (`user` ASC, `date` ASC),
+  INDEX `forum_INDEX` (`forum` ASC, `date` ASC))
 ENGINE = InnoDB
 DEFAULT CHARACTER SET = utf8;
 
@@ -127,10 +127,10 @@ CREATE TABLE IF NOT EXISTS `forum_db`.`post` (
   `thread_id` INT UNSIGNED NOT NULL,
   PRIMARY KEY (`id`, `user_id`, `thread_id`),
   INDEX `fk_post_parent_1_idx` (`parent` ASC),
-  INDEX `user_INDEX` (`user` ASC),
-  INDEX `forum_INDEX` (`forum` ASC),
-  INDEX `fk_post_thread1_idx` (`thread_id` ASC),
+  INDEX `user_INDEX` (`user` ASC, `date` ASC),
+  INDEX `forum_INDEX` (`forum` ASC, `date` ASC),
   INDEX `fk_post_user1_idx` (`user_id` ASC),
+  INDEX `thread_INDEX` (`thread_id` ASC, `date` ASC),
   CONSTRAINT `fk_post_parent_1`
     FOREIGN KEY (`parent`)
     REFERENCES `forum_db`.`post` (`id`)
