@@ -18,7 +18,7 @@ USE `forum_db` ;
 DROP TABLE IF EXISTS `forum_db`.`user` ;
 
 CREATE TABLE IF NOT EXISTS `forum_db`.`user` (
-  `id` BIGINT(20) UNSIGNED NOT NULL AUTO_INCREMENT,
+  `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
   `username` VARCHAR(255) NULL DEFAULT NULL,
   `password` VARCHAR(255) NOT NULL,
   `email` VARCHAR(255) NOT NULL,
@@ -38,9 +38,8 @@ DEFAULT CHARACTER SET = utf8;
 DROP TABLE IF EXISTS `forum_db`.`followers` ;
 
 CREATE TABLE IF NOT EXISTS `forum_db`.`followers` (
-  `follower` BIGINT(20) UNSIGNED NOT NULL,
-  `followee` BIGINT(20) UNSIGNED NOT NULL,
-  `unfollowed` TINYINT(4) NOT NULL DEFAULT '0',
+  `follower` INT UNSIGNED NOT NULL,
+  `followee` INT UNSIGNED NOT NULL,
   PRIMARY KEY (`follower`, `followee`),
   INDEX `fk_user_has_user_user1_idx` (`followee` ASC),
   INDEX `fk_user_has_user_user_idx` (`follower` ASC),
@@ -62,11 +61,11 @@ DEFAULT CHARACTER SET = utf8;
 DROP TABLE IF EXISTS `forum_db`.`forum` ;
 
 CREATE TABLE IF NOT EXISTS `forum_db`.`forum` (
-  `id` BIGINT(20) UNSIGNED NOT NULL AUTO_INCREMENT,
+  `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
   `name` VARCHAR(255) NOT NULL,
   `short_name` VARCHAR(255) NOT NULL,
   `user` VARCHAR(255) NOT NULL,
-  `user_id` BIGINT(20) UNSIGNED NOT NULL,
+  `user_id` INT UNSIGNED NOT NULL,
   PRIMARY KEY (`id`, `user_id`),
   UNIQUE INDEX `short_name_UNIQUE` (`short_name` ASC),
   INDEX `fk_forum_user1_idx` (`user_id` ASC),
@@ -85,7 +84,7 @@ DEFAULT CHARACTER SET = utf8;
 DROP TABLE IF EXISTS `forum_db`.`thread` ;
 
 CREATE TABLE IF NOT EXISTS `forum_db`.`thread` (
-  `id` BIGINT(20) UNSIGNED NOT NULL AUTO_INCREMENT,
+  `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
   `date` DATETIME NOT NULL,
   `isClosed` TINYINT(3) UNSIGNED NOT NULL DEFAULT '0',
   `isDeleted` TINYINT(3) UNSIGNED NOT NULL DEFAULT '0',
@@ -98,8 +97,8 @@ CREATE TABLE IF NOT EXISTS `forum_db`.`thread` (
   `points` INT(11) NOT NULL DEFAULT '0',
   `user` VARCHAR(255) NOT NULL,
   `forum` VARCHAR(255) NOT NULL,
-  `forum_id` BIGINT(20) UNSIGNED NOT NULL,
-  `user_id` BIGINT(20) UNSIGNED NOT NULL,
+  `forum_id` INT UNSIGNED NOT NULL,
+  `user_id` INT UNSIGNED NOT NULL,
   PRIMARY KEY (`id`, `forum_id`, `user_id`),
   INDEX `fk_thread_forum1_idx` (`forum_id` ASC),
   INDEX `fk_thread_user1_idx` (`user_id` ASC),
@@ -123,9 +122,9 @@ DEFAULT CHARACTER SET = utf8;
 DROP TABLE IF EXISTS `forum_db`.`post` ;
 
 CREATE TABLE IF NOT EXISTS `forum_db`.`post` (
-  `id` BIGINT(20) UNSIGNED NOT NULL AUTO_INCREMENT,
+  `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
   `date` DATETIME NOT NULL,
-  `dislikes` INT(11) NOT NULL DEFAULT '0',
+  `dislikes` INT(11) NOT NULL DEFAULT 0,
   `likes` INT(11) NOT NULL DEFAULT '0',
   `isApproved` TINYINT(3) UNSIGNED NOT NULL DEFAULT '0',
   `isDeleted` TINYINT(3) UNSIGNED NOT NULL DEFAULT '0',
@@ -133,12 +132,12 @@ CREATE TABLE IF NOT EXISTS `forum_db`.`post` (
   `isHighlighted` TINYINT(3) UNSIGNED NOT NULL DEFAULT '0',
   `isSpam` TINYINT(3) UNSIGNED NOT NULL DEFAULT '0',
   `message` MEDIUMTEXT NOT NULL,
-  `parent` BIGINT(20) UNSIGNED NULL DEFAULT NULL,
+  `parent` INT UNSIGNED NULL DEFAULT NULL,
   `points` INT(11) NOT NULL DEFAULT '0',
   `forum` VARCHAR(255) NOT NULL,
   `user` VARCHAR(255) NOT NULL,
-  `user_id` BIGINT(20) UNSIGNED NOT NULL,
-  `thread_id` BIGINT(20) UNSIGNED NOT NULL,
+  `user_id` INT UNSIGNED NOT NULL,
+  `thread_id` INT UNSIGNED NOT NULL,
   PRIMARY KEY (`id`, `user_id`, `thread_id`),
   INDEX `fk_post_user1_idx` (`user_id` ASC),
   INDEX `fk_post_thread1_idx` (`thread_id` ASC),
@@ -169,13 +168,11 @@ DEFAULT CHARACTER SET = utf8;
 DROP TABLE IF EXISTS `forum_db`.`subscriptions` ;
 
 CREATE TABLE IF NOT EXISTS `forum_db`.`subscriptions` (
-  `user_id` BIGINT(20) UNSIGNED NOT NULL,
-  `thread_id` BIGINT(20) UNSIGNED NOT NULL,
-  `unsubscribed` TINYINT(4) NOT NULL,
+  `user_id` INT UNSIGNED NOT NULL,
+  `thread_id` INT UNSIGNED NOT NULL,
   PRIMARY KEY (`user_id`, `thread_id`),
   INDEX `fk_user_subscribed_thread1_idx` (`thread_id` ASC),
   INDEX `fk_userId_to_user_id_idx` (`user_id` ASC),
-  INDEX `user_unsubscribed` (`user_id` ASC, `unsubscribed` ASC),
   CONSTRAINT `fk_userId_to_user_id`
     FOREIGN KEY (`user_id`)
     REFERENCES `forum_db`.`user` (`id`),

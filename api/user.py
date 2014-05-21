@@ -63,7 +63,7 @@ def details(ds, **args):
     c = db.cursor()
 
     c.execute(u"""SELECT thread_id FROM subscriptions
-                 WHERE user_id = %s AND unsubscribed = 0""", (user_data['id'],))
+                 WHERE user_id = %s""", (user_data['id'],))
     user_data['subscriptions'] = [s['thread_id'] for s in c]
 
     c.close()
@@ -90,7 +90,7 @@ def list_followers_following(ds, who, handler, **args):
     query.append(u"""SELECT email FROM followers
                     INNER JOIN user ON followers.%s = user.id
                     WHERE %s """ % (possibles[val], possibles[next_val(val)])
-                 + u"""= %s AND unfollowed = 0""")
+                 + u"""= %s""")
 
     params = (user_id, )
 
@@ -126,7 +126,6 @@ def listFollowing(ds, handler=get_info_by_email, **args):
 
 
 def listPosts(ds, **args):
-    # TODO: date parameter problem
     return post.list(ds, **args)
 
 
@@ -137,24 +136,12 @@ def follow(ds, **args):
     followee_id = get_id_by_email(ds, args['followee'])
     params = (follower_id, followee_id)
 
+    query = u"""INSERT INTO followers (follower, followee)
+                   VALUES (%s, %s)"""
+
     ds.close_all()
     conn = ds.get_db()
     db = conn['conn']
-    c = db.cursor()
-    c.execute(u"""SELECT * FROM followers
-                 WHERE follower = %s AND followee = %s""",
-              params)
-
-    in_base_follower = c.fetchone()
-    c.close()
-
-    if in_base_follower:
-        query = u"""UPDATE followers SET unfollowed = 0
-                   WHERE follower = %s AND followee = %s"""
-    else:
-        query = u"""INSERT INTO followers (follower, followee)
-                   VALUES (%s, %s)"""
-
     c = db.cursor()
     try:
         c.execute(query, params)
@@ -181,7 +168,7 @@ def unfollow(ds, **args):
     db = conn['conn']
     c = db.cursor()
     try:
-        c.execute(u"""UPDATE followers SET unfollowed=1
+        c.execute(u"""DELETE FROM followers
                      WHERE follower = %s AND followee = %s""",
                   params)
         db.commit()

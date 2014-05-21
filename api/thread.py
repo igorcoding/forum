@@ -245,23 +245,12 @@ def subscribe(ds, **args):
     user_id = get_id_by_email(ds, args['user'])
     thread_id = args['thread']
 
+    query = u"""INSERT INTO subscriptions (user_id, thread_id)
+               VALUES (%s, %s)"""
+
     ds.close_all()
     conn = ds.get_db()
     db = conn['conn']
-    c = db.cursor()
-    c.execute(u"""SELECT * FROM subscriptions
-                 WHERE user_id = %s AND thread_id = %s""",
-              (user_id, thread_id))
-    subscribed = c.fetchone()
-    c.close()
-
-    if subscribed:
-        query = u"""UPDATE subscriptions SET unsubscribed = 0
-                   WHERE user_id = %s AND thread_id = %s"""
-    else:
-        query = u"""INSERT INTO subscriptions (user_id, thread_id)
-                   VALUES (%s, %s)"""
-
     c = db.cursor()
     try:
         c.execute(query, (user_id, thread_id))
@@ -290,7 +279,7 @@ def unsubscribe(ds, **args):
     db = conn['conn']
     c = db.cursor()
     try:
-        c.execute(u"""UPDATE subscriptions SET unsubscribed = 1
+        c.execute(u"""DELETE FROM subscriptions
                    WHERE user_id = %s AND thread_id = %s""",
                   (user_id, thread_id))
         db.commit()
