@@ -110,6 +110,7 @@ def main():
     application = tornado.web.Application([
         (r"/(\S+)/(\S+)", Handler),
         (r"/clear/", ClearHandler),
+        (r"/clear", ClearHandler),
     ])
 
     logging.info("Server started on port %s", options.port)
