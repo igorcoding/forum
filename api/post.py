@@ -140,6 +140,9 @@ def list(ds, orderby='date', **args):
     c.execute(str(query), params)
     posts = c.fetchall()
 
+    c.close()
+    db.close() #ds.close(conn['id'])
+
     posts = __builtin__.list(posts)
 
     for post in posts:
@@ -198,9 +201,6 @@ def list(ds, orderby='date', **args):
             post['user'] = user.details(ds, user=post['user'])
 
     # posts = [details(ds, post=row['id'], related=args['related']) for row in c]
-
-    c.close()
-    db.close() #ds.close(conn['id'])
 
     return posts
 
