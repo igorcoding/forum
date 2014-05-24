@@ -52,3 +52,7 @@ def make_boolean(params, arr):
 def check_empty(res, message):
     if not res or len(res) == 0:
         raise Exception(message)
+
+
+def date_to_str(date):
+    return date.strftime("%Y-%m-%d %H:%M:%S")

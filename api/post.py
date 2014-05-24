@@ -1,8 +1,9 @@
+import __builtin__
 import forum
 import thread
 import user
 from util.StringBuilder import *
-from api.api_helpers.common_helper import required, optional, make_boolean, semi_required, check_empty
+from api.api_helpers.common_helper import required, optional, make_boolean, semi_required, check_empty, date_to_str
 from api.api_helpers.user_helper import get_id_by_email
 
 
@@ -103,27 +104,32 @@ def list(ds, orderby='date', **args):
     optional('related', args, [], ['user', 'forum', 'thread'])
 
     query = StringBuilder()
-    query.append(u"""SELECT id FROM post""")
+    query.append(u"""SELECT * FROM post""")
     params = ()
 
+    if 'thread' in args['related']:
+        query.append(u"""INNER JOIN thread ON post.thread_id = thread.id""")
+    if 'forum' in args['related']:
+        query.append(u"""INNER JOIN forum ON post.forum = forum.short_name""")
+
     if 'forum' in args:
-        query.append(u"""WHERE forum = %s""")
+        query.append(u"""WHERE post.forum = %s""")
         params += (args['forum'],)
 
     elif 'thread' in args:
-        query.append(u"""WHERE thread_id = %s""")
+        query.append(u"""WHERE post.thread_id = %s""")
         params += (args['thread'],)
 
     elif 'user' in args:
-        query.append(u"""WHERE user = %s""")
+        query.append(u"""WHERE post.user = %s""")
         params += (args['user'],)
 
     if args['since']:
-        query.append(u"""AND date >= %s""")
+        query.append(u"""AND post.date >= %s""")
         params += (args['since'],)
 
     if args['order']:
-        query.append(u"""ORDER BY date %s""" % args['order'])
+        query.append(u"""ORDER BY post.date %s""" % args['order'])
 
     if args['limit']:
         query.append(u"""LIMIT %d""" % int(args['limit']))
@@ -132,8 +138,66 @@ def list(ds, orderby='date', **args):
     db = conn['conn']
     c = db.cursor()
     c.execute(str(query), params)
+    posts = c.fetchall()
 
-    posts = [details(ds, post=row['id'], related=args['related']) for row in c]
+    posts = __builtin__.list(posts)
+
+    for post in posts:
+        if 'forum' in args['related']:
+            post['forum'] = {
+                'id': post['forum.id'],
+                'name': post['name'],
+                'short_name': post['short_name'],
+                'user': post['forum.user'],
+            }
+
+            del post['forum.id']
+            del post['name']
+            del post['short_name']
+            del post['forum.user']
+            del post['forum.user_id']
+
+        if 'thread' in args['related']:
+            post['thread'] = {
+                'id': post['thread.id'],
+                'date': date_to_str(post['thread.date']),
+                'isClosed': post['isClosed'],
+                'isDeleted': post['thread.isDeleted'],
+                'title': post['title'],
+                'slug': post['slug'],
+                'posts': post['posts'],
+                'message': post['thread.message'],
+                'dislikes': post['thread.dislikes'],
+                'likes': post['thread.likes'],
+                'points': post['thread.points'],
+                'user': post['thread.user'],
+                'forum': post['thread.forum']
+            }
+
+            del post['thread.id']
+            del post['thread.date']
+            del post['isClosed']
+            del post['thread.isDeleted']
+            del post['title']
+            del post['slug']
+            del post['posts']
+            del post['thread.message']
+            del post['thread.dislikes']
+            del post['thread.likes']
+            del post['thread.points']
+            del post['thread.user']
+            del post['thread.forum']
+        else:
+            post['thread'] = post['thread_id']
+
+        del post['user_id']
+        del post['thread_id']
+        post['date'] = date_to_str(post['date'])
+
+        if 'user' in args['related']:
+            post['user'] = user.details(ds, user=post['user'])
+
+    # posts = [details(ds, post=row['id'], related=args['related']) for row in c]
 
     c.close()
     ds.close(conn['id'])
