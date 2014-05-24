@@ -9,7 +9,7 @@ def create(ds, **args):
     required(['username', 'name', 'email', 'about'], args)
     optional('isAnonymous', args, False)
 
-    ds.close_all()
+    #ds.close_all()
     conn = ds.get_db()
     db = conn['conn']
     c = db.cursor()
