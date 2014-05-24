@@ -71,15 +71,16 @@ class DataService:
             "TRUNCATE TABLE user",
             "set FOREIGN_KEY_CHECKS=1"
         ]
-        self.close_all()
+        # self.close_all()
         conn = self.get_db()
         db = conn['conn']
         c = db.cursor()
         for statement in clears:
             c.execute(statement)
         c.close()
-        self.close(conn['id'])
-        self.close_all()
+        db.close()
+        # self.close(conn['id'])
+        # self.close_all()
 
 
     def connect(self):
@@ -99,7 +100,7 @@ class DataService:
         # if self.get_length() >= self._connections_limit:
         #     db_obj['forceRemoval'] = True
         #
-        self.opened_connections.append(db_obj)
+        # self.opened_connections.append(db_obj)
         # self._id += 1
         return db_obj
 
@@ -149,8 +150,9 @@ class DataService:
 
     # @synchronous('lock')
     def close(self, conn_id):
-        self.opened_connections[-1]['conn'].close()
-        self.opened_connections.pop()
+        pass
+        # self.opened_connections[-1]['conn'].close()
+        # self.opened_connections.pop()
         # self._lock()
         # conn = None
         # real_index = None

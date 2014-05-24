@@ -27,7 +27,7 @@ def create(ds, **args):
         raise e
     finally:
         c.close()
-        ds.close(conn['id'])
+        db.close() #ds.close(conn['id'])
 
     data = {
         'id': _id,
@@ -50,7 +50,7 @@ def details(ds, **args):
                WHERE forum.short_name = %s""", (args['forum'],))
     forum_data = c.fetchone()
     c.close()
-    ds.close(conn['id'])
+    db.close() #ds.close(conn['id'])
 
     check_empty(forum_data, u"No forum found with that short_name")
 
@@ -103,7 +103,7 @@ def listUsers(ds, **args):
     users_list = [user.details(ds, user=u['user']) for u in c]
 
     c.close()
-    ds.close(conn['id'])
+    db.close() #ds.close(conn['id'])
 
     return users_list
 

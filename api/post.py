@@ -40,7 +40,7 @@ def create(ds, **args):
         raise e
     finally:
         c.close()
-        ds.close(conn['id'])
+        db.close() #ds.close(conn['id'])
 
     data = {
         'date': args['date'],
@@ -70,7 +70,7 @@ def details(ds, **args):
                WHERE id = %s""", (args['post'],))
     post_data = c.fetchone()
     c.close()
-    ds.close(conn['id'])
+    db.close() #ds.close(conn['id'])
 
     check_empty(post_data, u"No post found with that id")
 
@@ -200,7 +200,7 @@ def list(ds, orderby='date', **args):
     # posts = [details(ds, post=row['id'], related=args['related']) for row in c]
 
     c.close()
-    ds.close(conn['id'])
+    db.close() #ds.close(conn['id'])
 
     return posts
 
@@ -223,7 +223,7 @@ def remove(ds, **args):
         raise e
     finally:
         c.close()
-        ds.close(conn['id'])
+        db.close() #ds.close(conn['id'])
 
     return {'post': args['post']}
 
@@ -246,7 +246,7 @@ def restore(ds, **args):
         raise e
     finally:
         c.close()
-        ds.close(conn['id'])
+        db.close() #ds.close(conn['id'])
 
     return {'post': args['post']}
 
@@ -269,7 +269,7 @@ def update(ds, **args):
         raise e
     finally:
         c.close()
-        ds.close(conn['id'])
+        db.close() #ds.close(conn['id'])
 
     return details(ds, post=int(args['post']))
 
@@ -307,6 +307,6 @@ def vote(ds, **args):
         raise e
     finally:
         c.close()
-        ds.close(conn['id'])
+        db.close() #ds.close(conn['id'])
 
     return details(ds, post=args['post'])

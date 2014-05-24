@@ -32,7 +32,7 @@ def create(ds, **args):
         raise e
     finally:
         c.close()
-        ds.close(conn['id'])
+        db.close() #ds.close(conn['id'])
 
     return {
         'id': thread_id,
@@ -70,7 +70,7 @@ def close(ds, **args):
         raise e
     finally:
         c.close()
-        ds.close(conn['id'])
+        db.close() #ds.close(conn['id'])
 
     return {'thread': args['thread']}
 
@@ -104,7 +104,7 @@ def details(ds, **args):
                WHERE id = %s""", (args['thread'],))
     thread_data = c.fetchone()
     c.close()
-    ds.close(conn['id'])
+    db.close() #ds.close(conn['id'])
 
     check_empty(thread_data, u"No thread found with that id")
 
@@ -160,7 +160,7 @@ def list(ds, orderby='date', **args):
     threads = [details(ds, thread=row['id'], related=args['related']) for row in c]
 
     c.close()
-    ds.close(conn['id'])
+    db.close() #ds.close(conn['id'])
 
     return threads
 
@@ -187,7 +187,7 @@ def open(ds, **args):
         raise e
     finally:
         c.close()
-        ds.close(conn['id'])
+        db.close() #ds.close(conn['id'])
 
     return {'thread': args['thread']}
 
@@ -210,7 +210,7 @@ def remove(ds, **args):
         raise e
     finally:
         c.close()
-        ds.close(conn['id'])
+        db.close() #ds.close(conn['id'])
 
     return {'thread': args['thread']}
 
@@ -234,7 +234,7 @@ def restore(ds, **args):
         raise e
     finally:
         c.close()
-        ds.close(conn['id'])
+        db.close() #ds.close(conn['id'])
 
     return {'thread': args['thread']}
 
@@ -260,7 +260,7 @@ def subscribe(ds, **args):
         raise e
     finally:
         c.close()
-        ds.close(conn['id'])
+        db.close() #ds.close(conn['id'])
 
     return {
         'thread': args['thread'],
@@ -288,7 +288,7 @@ def unsubscribe(ds, **args):
         raise e
     finally:
         c.close()
-        ds.close(conn['id'])
+        db.close() #ds.close(conn['id'])
 
     return {
         'thread': args['thread'],
@@ -315,7 +315,7 @@ def update(ds, **args):
         raise e
     finally:
         c.close()
-        ds.close(conn['id'])
+        db.close() #ds.close(conn['id'])
 
     return details(ds, thread=args['thread'])
 
@@ -353,6 +353,6 @@ def vote(ds, **args):
         raise e
     finally:
         c.close()
-        ds.close(conn['id'])
+        db.close() #ds.close(conn['id'])
 
     return details(ds, thread=args['thread'])

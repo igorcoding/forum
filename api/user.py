@@ -25,7 +25,7 @@ def create(ds, **args):
         raise e
     finally:
         c.close()
-        ds.close(conn['id'])
+        db.close() #db.close() #ds.close(conn['id'])
 
     user_data = {
         'about': args['about'],
